@@ -131,6 +131,23 @@ export type RatingPredictionInput = {
 export const predictRating = (input: RatingPredictionInput) =>
   apiPost<{ predicted_rating: number }>("/predict/rating", input);
 
+export type ChatSource = {
+  player_id: string;
+  player_name: string;
+  team: string;
+  position: string;
+  summary_text: string;
+  distance: number;
+};
+
+export type ChatAskResponse = {
+  answer: string;
+  sources: ChatSource[];
+};
+
+export const askChat = (query: string, top_k = 5) =>
+  apiPost<ChatAskResponse>("/chat/ask", { query, top_k });
+
 export const getMatches = (stage?: string, team?: string) => {
   const params = new URLSearchParams();
   if (stage) params.set("stage", stage);

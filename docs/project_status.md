@@ -50,12 +50,17 @@ it should always reflect what's actually working right now, not what's planned (
 
 ### Frontend (Next.js 16)
 - Pages: overview (`/`), player leaderboard + profile (`/players`, `/players/[id]`),
-  team standings + profile (`/teams`, `/teams/[team]`), live rating predictor (`/predict`).
+  team standings + profile (`/teams`, `/teams/[team]`), live rating predictor (`/predict`),
+  chat assistant (`/chat`).
+- Chat page: chat-bubble UI (user messages right-aligned, assistant answers left with
+  source player chips underneath), example prompt suggestions for an empty chat,
+  animated "thinking" indicator while waiting on Groq, calls `POST /chat/ask`.
 - Charts styled to the `dataviz` skill's validated palette (light/dark, CSS custom
   properties by role).
 - Verified: type-checks clean, builds clean, renders correctly with a graceful
-  "API unreachable" fallback when the backend isn't running, and end-to-end against a
-  live local backend with real trained models.
+  "API unreachable" fallback when the backend isn't running (checked on both `/predict`
+  and `/chat`), and end-to-end against a live local backend — including a real
+  grounded chat answer rendered in the browser with matching source players shown.
 
 ### GenAI (Phase 3, in progress)
 - **Embeddings**: `backend/genai/generate_embeddings.py` populates `player_embeddings`
@@ -111,12 +116,12 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: embeddings, retrieval, and grounded generation are all built
-  (see above) — the core RAG loop works end-to-end. Still unbuilt: natural-language →
-  chart, auto-generated/cached reports, rate limiting on the GenAI endpoints, and
-  team-level summaries (`player_embeddings` is player-only; a question like "which team
-  had the best defense?" has no team embeddings to retrieve against yet). No frontend
-  chat UI yet either — `/chat/*` has only been exercised via curl/tests so far.
+- **Phase 3 (GenAI)**: embeddings, retrieval, grounded generation, and a frontend chat
+  UI are all built (see above) — the core RAG feature works end-to-end, backend and
+  frontend. Still unbuilt: natural-language → chart, auto-generated/cached reports,
+  rate limiting on the GenAI endpoints, and team-level summaries (`player_embeddings`
+  is player-only; a question like "which team had the best defense?" has no team
+  embeddings to retrieve against yet).
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App
   Insights wiring (env var is already passed to the container, just unused), Grafana
   dashboards, Sentry, load testing.

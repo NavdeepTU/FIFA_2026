@@ -74,7 +74,7 @@ data/raw/*.csv
 | `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
-| `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`. |
+| `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`, `/predict`, `/chat`. |
 | `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`. |
 | `frontend/src/lib/api.ts` | Typed fetch client for the backend API. |
 | `infra/` | Terraform: `main.tf` (resource group), `postgres.tf`, `storage.tf`, `keyvault.tf`, `container_apps.tf`, `budget.tf`. |

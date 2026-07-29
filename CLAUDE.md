@@ -21,6 +21,13 @@ dependencies (see `docs/ARCHITECTURE.md` §6).
 - `/Users/navdeep/.claude/plans/toasty-honking-kettle.md` — the original phased build
   plan and the reasoning behind cost/tooling decisions (Azure, Groq, no local Docker).
 
+## Communication & design preferences
+
+- Keep responses in plain, simple language. Only go technical/in-depth if the user
+  specifically asks for that level of detail.
+- The frontend must be elegant, aesthetic, modern, and as user-friendly as possible —
+  not just functional.
+
 ## Conventions already established
 
 - No Docker, no local Postgres, no local Terraform/Azure CLI — installed dependencies
