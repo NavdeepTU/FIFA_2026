@@ -1,0 +1,55 @@
+About Dataset
+FIFA World Cup 2026 Player Performance Dataset
+
+The FIFA World Cup 2026 Player Performance Dataset is a comprehensive collection of player statistics, match events, and performance metrics gathered throughout the tournament. Designed for sports analytics, machine learning, data visualization, and football research, this dataset provides detailed insights into individual and team performances across all stages of the competition.
+
+The dataset includes player attributes, match participation records, goals, assists, shots, passing accuracy, defensive actions, goalkeeper statistics, disciplinary records, physical performance indicators, and advanced analytical metrics. It enables users to evaluate player effectiveness, compare athletes across positions, identify emerging talents, and analyze tactical trends during the tournament.
+
+Researchers, data scientists, football analysts, students, and sports enthusiasts can use this dataset to build predictive models, create interactive dashboards, perform statistical analysis, and explore performance patterns at both player and team levels. The dataset is suitable for applications such as player rating systems, match outcome prediction, scouting analysis, team strategy evaluation, and AI-powered football intelligence systems.
+
+Example Features
+
+Player ID
+Player Name
+National Team
+Position
+Age
+Height
+Weight
+Matches Played
+Minutes Played
+Goals
+Assists
+Shots
+Shots on Target
+Passes Completed
+Pass Accuracy (%)
+Key Passes
+Dribbles Completed
+Tackles
+Interceptions
+Clearances
+Saves (Goalkeepers)
+Clean Sheets
+Yellow Cards
+Red Cards
+Expected Goals (xG)
+Expected Assists (xA)
+Distance Covered
+Sprint Count
+Player Rating
+
+
+Potential Use Cases
+
+Football Performance Analysis
+Sports Data Science Projects
+Machine Learning and AI Research
+Predictive Analytics
+Player Scouting Systems
+Team Performance Evaluation
+Data Visualization Dashboards
+Sports Business Intelligence
+Educational and Academic Research
+FIFA World Cup Historical Analysis
+This dataset offers a valuable foundation for understanding player performance dynamics during the FIFA World Cup 2026 and supports advanced analytical exploration of one of the world's most prestigious sporting events.

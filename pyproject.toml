@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+exclude = ["backend/.venv", "**/.venv", "frontend"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = ["S101"]  # assert is fine in tests and this project's scale
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]
+"backend/app/routers/**" = ["B008"]  # FastAPI's Depends() is designed for use in argument defaults

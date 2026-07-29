@@ -1,0 +1,30 @@
+# data (kept local; large, not committed)
+data/raw/*.csv
+data/curated/
+
+# python
+backend/.venv/
+etl/.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+
+# node / next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/.terraform.lock.hcl
+infra/*.tfvars
+!infra/*.tfvars.example
+
+# os / editor
+.DS_Store
+.vscode/
+.claude/

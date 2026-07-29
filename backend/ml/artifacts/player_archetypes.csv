@@ -1,0 +1,1249 @@
+player_id,player_name,team,position,cluster,archetype
+P00001,Kylian Griezmann,France,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00002,Antoine Tchouameni,France,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00003,Ousmane Hernandez,France,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00004,Kylian Camavinga,France,Defender,1,Defender: Clearances + Aerial duels
+P00005,Antoine Kounde,France,Defender,1,Defender: Clearances + Aerial duels
+P00006,Ousmane Upamecano,France,Defender,1,Defender: Clearances + Aerial duels
+P00007,Aurelien Rabiot,France,Defender,1,Defender: Clearances + Aerial duels
+P00008,Eduardo Sissoko,France,Defender,1,Defender: Clearances + Aerial duels
+P00009,Theo Varane,France,Defender,1,Defender: Clearances + Aerial duels
+P00010,Lucas Pavard,France,Defender,1,Defender: Clearances + Aerial duels
+P00011,Randal Diarra,France,Defender,1,Defender: Clearances + Aerial duels
+P00012,Olivier Badiashile,France,Defender,1,Defender: Clearances + Aerial duels
+P00013,Kylian Maignan,France,Midfielder,2,Midfielder: Key passes + Passing
+P00014,Antoine Saliba,France,Midfielder,2,Midfielder: Key passes + Passing
+P00015,Ousmane Konate,France,Midfielder,2,Midfielder: Key passes + Passing
+P00016,Aurelien Thuram,France,Midfielder,2,Midfielder: Key passes + Passing
+P00017,Eduardo Olise,France,Midfielder,2,Midfielder: Key passes + Passing
+P00018,Theo Mukiele,France,Midfielder,2,Midfielder: Key passes + Passing
+P00019,Lucas Todibo,France,Midfielder,2,Midfielder: Key passes + Passing
+P00020,Randal Griezmann,France,Midfielder,2,Midfielder: Key passes + Passing
+P00021,Kylian Olise,France,Forward,0,Forward: Shots + Goals
+P00022,Antoine Mukiele,France,Forward,0,Forward: Shots + Goals
+P00023,Ousmane Todibo,France,Forward,0,Forward: Shots + Goals
+P00024,Aurelien Griezmann,France,Forward,0,Forward: Shots + Goals
+P00025,Eduardo Tchouameni,France,Forward,0,Forward: Shots + Goals
+P00026,Theo Hernandez,France,Forward,0,Forward: Shots + Goals
+P00027,Joshua Musiala,Germany,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00028,Jamal Havertz,Germany,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00029,Leroy Schlotterbeck,Germany,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00030,Joshua Rudiger,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00031,Jamal Goretzka,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00032,Leroy Werner,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00033,Kai Neuer,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00034,Antonio Gnabry,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00035,Nico Ginter,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00036,Leon Sule,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00037,Florian Brandt,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00038,Timo Henrichs,Germany,Defender,1,Defender: Clearances + Aerial duels
+P00039,Joshua Tah,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00040,Jamal Koch,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00041,Leroy Klostermann,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00042,Kai Can,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00043,Antonio Fulle,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00044,Nico Volland,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00045,Leon Gotze,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00046,Florian Musiala,Germany,Midfielder,2,Midfielder: Key passes + Passing
+P00047,Joshua Fulle,Germany,Forward,0,Forward: Shots + Goals
+P00048,Jamal Volland,Germany,Forward,0,Forward: Shots + Goals
+P00049,Leroy Gotze,Germany,Forward,0,Forward: Shots + Goals
+P00050,Kai Musiala,Germany,Forward,0,Forward: Shots + Goals
+P00051,Antonio Havertz,Germany,Forward,0,Forward: Shots + Goals
+P00052,Nico Schlotterbeck,Germany,Forward,0,Forward: Shots + Goals
+P00053,Pedro Gavi,Spain,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00054,Gavi Morata,Spain,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00055,Rodri Fati,Spain,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00056,Pedro Torres,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00057,Gavi Asensio,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00058,Rodri Laporte,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00059,Alvaro Oyarzabal,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00060,Ferran Pau,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00061,Ansu Alba,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00062,Marco Carvajal,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00063,Dani Garcia,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00064,Aymeric Yamal,Spain,Defender,1,Defender: Clearances + Aerial duels
+P00065,Pedro Riquelme,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00066,Gavi Ramos,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00067,Rodri Alonso,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00068,Alvaro Llorente,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00069,Ferran Cubarsi,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00070,Ansu Le Normand,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00071,Marco Mikel,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00072,Dani Gavi,Spain,Midfielder,2,Midfielder: Key passes + Passing
+P00073,Pedro Cubarsi,Spain,Forward,0,Forward: Shots + Goals
+P00074,Gavi Le Normand,Spain,Forward,0,Forward: Shots + Goals
+P00075,Rodri Mikel,Spain,Forward,0,Forward: Shots + Goals
+P00076,Alvaro Gavi,Spain,Forward,0,Forward: Shots + Goals
+P00077,Ferran Morata,Spain,Forward,0,Forward: Shots + Goals
+P00078,Ansu Fati,Spain,Forward,0,Forward: Shots + Goals
+P00079,Harry Bellingham,England,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00080,Jude Saka,England,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00081,Phil Rashford,England,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00082,Harry Rice,England,Defender,1,Defender: Clearances + Aerial duels
+P00083,Jude Grealish,England,Defender,1,Defender: Clearances + Aerial duels
+P00084,Phil Walker,England,Defender,1,Defender: Clearances + Aerial duels
+P00085,Bukayo Alexander-Arnold,England,Defender,1,Defender: Clearances + Aerial duels
+P00086,Declan Trippier,England,Defender,1,Defender: Clearances + Aerial duels
+P00087,Marcus Mount,England,Defender,1,Defender: Clearances + Aerial duels
+P00088,Jack Toney,England,Defender,1,Defender: Clearances + Aerial duels
+P00089,John Palmer,England,Defender,1,Defender: Clearances + Aerial duels
+P00090,Kyle Gallagher,England,Defender,1,Defender: Clearances + Aerial duels
+P00091,Harry Phillips,England,Midfielder,2,Midfielder: Key passes + Passing
+P00092,Jude Maddison,England,Midfielder,2,Midfielder: Key passes + Passing
+P00093,Phil Eze,England,Midfielder,2,Midfielder: Key passes + Passing
+P00094,Bukayo Ramsdale,England,Midfielder,2,Midfielder: Key passes + Passing
+P00095,Declan Watkins,England,Midfielder,2,Midfielder: Key passes + Passing
+P00096,Marcus Chilwell,England,Midfielder,2,Midfielder: Key passes + Passing
+P00097,Jack White,England,Midfielder,2,Midfielder: Key passes + Passing
+P00098,John Bellingham,England,Midfielder,2,Midfielder: Key passes + Passing
+P00099,Harry Watkins,England,Forward,0,Forward: Shots + Goals
+P00100,Jude Chilwell,England,Forward,0,Forward: Shots + Goals
+P00101,Phil White,England,Forward,0,Forward: Shots + Goals
+P00102,Bukayo Bellingham,England,Forward,0,Forward: Shots + Goals
+P00103,Declan Saka,England,Forward,0,Forward: Shots + Goals
+P00104,Marcus Rashford,England,Forward,0,Forward: Shots + Goals
+P00105,Gianluigi Chiesa,Italy,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00106,Federico Tonali,Italy,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00107,Nicolo Immobile,Italy,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00108,Gianluigi Verratti,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00109,Federico Pellegrini,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00110,Nicolo Bastoni,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00111,Sandro Scamacca,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00112,Marco Locatelli,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00113,Ciro Spinazzola,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00114,Lorenzo Frascati,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00115,Stephan Guglielmo,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00116,Alessandro Udogie,Italy,Defender,1,Defender: Clearances + Aerial duels
+P00117,Gianluigi Di Lorenzo,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00118,Federico Berardi,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00119,Nicolo Vicario,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00120,Sandro Bellanova,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00121,Marco Calafiori,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00122,Ciro Colpani,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00123,Lorenzo Retegui,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00124,Stephan Chiesa,Italy,Midfielder,2,Midfielder: Key passes + Passing
+P00125,Gianluigi Calafiori,Italy,Forward,0,Forward: Shots + Goals
+P00126,Federico Colpani,Italy,Forward,0,Forward: Shots + Goals
+P00127,Nicolo Retegui,Italy,Forward,0,Forward: Shots + Goals
+P00128,Sandro Chiesa,Italy,Forward,0,Forward: Shots + Goals
+P00129,Marco Tonali,Italy,Forward,0,Forward: Shots + Goals
+P00130,Ciro Immobile,Italy,Forward,0,Forward: Shots + Goals
+P00131,Frenkie Gakpo,Netherlands,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00132,Cody Blind,Netherlands,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00133,Memphis van Dijk,Netherlands,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00134,Frenkie de Ligt,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00135,Cody Dumfries,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00136,Memphis Simons,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00137,Daley Berghuis,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00138,Matthijs Timber,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00139,Virgil Weghorst,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00140,Denzel Malen,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00141,Teun Gravenberch,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00142,Xavi Veerman,Netherlands,Defender,1,Defender: Clearances + Aerial duels
+P00143,Frenkie Ake,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00144,Cody de Jong,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00145,Memphis van de Ven,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00146,Daley Frimpong,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00147,Matthijs Wijndal,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00148,Virgil Lang,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00149,Denzel Zerrouki,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00150,Teun Gakpo,Netherlands,Midfielder,2,Midfielder: Key passes + Passing
+P00151,Frenkie Wijndal,Netherlands,Forward,0,Forward: Shots + Goals
+P00152,Cody Lang,Netherlands,Forward,0,Forward: Shots + Goals
+P00153,Memphis Zerrouki,Netherlands,Forward,0,Forward: Shots + Goals
+P00154,Daley Gakpo,Netherlands,Forward,0,Forward: Shots + Goals
+P00155,Matthijs Blind,Netherlands,Forward,0,Forward: Shots + Goals
+P00156,Virgil van Dijk,Netherlands,Forward,0,Forward: Shots + Goals
+P00157,Kevin Lukaku,Belgium,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00158,Romelu Courtois,Belgium,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00159,Eden Dendoncker,Belgium,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00160,Kevin Tielemans,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00161,Romelu Witsel,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00162,Eden Castagne,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00163,Thibaut Vertonghen,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00164,Youri Chadli,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00165,Leander Doku,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00166,Axel Bakayoko,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00167,Thomas Openda,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00168,Jason Theate,Belgium,Defender,1,Defender: Clearances + Aerial duels
+P00169,Kevin Casteels,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00170,Romelu Onana,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00171,Eden De Ketelaere,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00172,Thibaut Faes,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00173,Youri Saelemaekers,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00174,Leander Vanheusden,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00175,Axel Lammens,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00176,Thomas Lukaku,Belgium,Midfielder,2,Midfielder: Key passes + Passing
+P00177,Kevin Saelemaekers,Belgium,Forward,0,Forward: Shots + Goals
+P00178,Romelu Vanheusden,Belgium,Forward,0,Forward: Shots + Goals
+P00179,Eden Lammens,Belgium,Forward,0,Forward: Shots + Goals
+P00180,Thibaut Lukaku,Belgium,Forward,0,Forward: Shots + Goals
+P00181,Youri Courtois,Belgium,Forward,0,Forward: Shots + Goals
+P00182,Leander Dendoncker,Belgium,Forward,0,Forward: Shots + Goals
+P00183,Cristiano Fernandes,Portugal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00184,Bruno Leao,Portugal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00185,Bernardo Felix,Portugal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00186,Cristiano Jota,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00187,Bruno Cancelo,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00188,Bernardo Santos,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00189,Rafael Guedes,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00190,Diogo Semedo,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00191,Joao Neves,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00192,Pedro Neto,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00193,Ruben Inacio,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00194,Pepe Carvalho,Portugal,Defender,1,Defender: Clearances + Aerial duels
+P00195,Cristiano Palhinha,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00196,Bruno Vitinha,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00197,Bernardo Conceicao,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00198,Rafael Antonio,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00199,Diogo Eustaquio,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00200,Joao Taremi,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00201,Pedro Pepe,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00202,Ruben Fernandes,Portugal,Midfielder,2,Midfielder: Key passes + Passing
+P00203,Cristiano Eustaquio,Portugal,Forward,0,Forward: Shots + Goals
+P00204,Bruno Taremi,Portugal,Forward,0,Forward: Shots + Goals
+P00205,Bernardo Pepe,Portugal,Forward,0,Forward: Shots + Goals
+P00206,Rafael Fernandes,Portugal,Forward,0,Forward: Shots + Goals
+P00207,Diogo Leao,Portugal,Forward,0,Forward: Shots + Goals
+P00208,Joao Felix,Portugal,Forward,0,Forward: Shots + Goals
+P00209,Luka Kovacic,Croatia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00210,Mateo Brozovic,Croatia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00211,Ivan Kramaric,Croatia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00212,Luka Vlasic,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00213,Mateo Pasalic,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00214,Ivan Gvardiol,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00215,Marcelo Lovren,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00216,Josko Bradaric,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00217,Dominik Juranovic,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00218,Andrej Sutalo,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00219,Mario Ivanusec,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00220,Ante Budimir,Croatia,Defender,1,Defender: Clearances + Aerial duels
+P00221,Luka Barisic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00222,Mateo Stanisic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00223,Ivan Erlic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00224,Marcelo Petkovic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00225,Josko Musah,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00226,Dominik Kljulanovic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00227,Andrej Bajkovic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00228,Mario Kovacic,Croatia,Midfielder,2,Midfielder: Key passes + Passing
+P00229,Luka Musah,Croatia,Forward,0,Forward: Shots + Goals
+P00230,Mateo Kljulanovic,Croatia,Forward,0,Forward: Shots + Goals
+P00231,Ivan Bajkovic,Croatia,Forward,0,Forward: Shots + Goals
+P00232,Marcelo Kovacic,Croatia,Forward,0,Forward: Shots + Goals
+P00233,Josko Brozovic,Croatia,Forward,0,Forward: Shots + Goals
+P00234,Dominik Kramaric,Croatia,Forward,0,Forward: Shots + Goals
+P00235,Granit Shaqiri,Switzerland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00236,Xherdan Sommer,Switzerland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00237,Manuel Zuber,Switzerland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00238,Granit Rodriguez,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00239,Xherdan Fernandes,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00240,Manuel Seferovic,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00241,Yann Elvedi,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00242,Ricardo Mbabu,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00243,Stefan Okafor,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00244,Fabian Ndoye,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00245,Remo Jashari,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00246,Haris Steiner,Switzerland,Defender,1,Defender: Clearances + Aerial duels
+P00247,Granit Zakaria,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00248,Xherdan Aebischer,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00249,Manuel Rieder,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00250,Yann Blerim,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00251,Ricardo Kobal,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00252,Stefan Mvogo,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00253,Fabian Pfannenstiel,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00254,Remo Shaqiri,Switzerland,Midfielder,2,Midfielder: Key passes + Passing
+P00255,Granit Kobal,Switzerland,Forward,0,Forward: Shots + Goals
+P00256,Xherdan Mvogo,Switzerland,Forward,0,Forward: Shots + Goals
+P00257,Manuel Pfannenstiel,Switzerland,Forward,0,Forward: Shots + Goals
+P00258,Yann Shaqiri,Switzerland,Forward,0,Forward: Shots + Goals
+P00259,Ricardo Sommer,Switzerland,Forward,0,Forward: Shots + Goals
+P00260,Stefan Zuber,Switzerland,Forward,0,Forward: Shots + Goals
+P00261,Christian Hojbjerg,Denmark,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00262,Pierre-Emile Christensen,Denmark,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00263,Simon Wind,Denmark,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00264,Christian Maehle,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00265,Pierre-Emile Damsgaard,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00266,Simon Dolberg,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00267,Andreas Lindstrom,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00268,Joakim Maeland,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00269,Rasmus Andersen,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00270,Mikkel Bah,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00271,Kasper Cornelius,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00272,Jannik Olsen,Denmark,Defender,1,Defender: Clearances + Aerial duels
+P00273,Christian Wass,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00274,Pierre-Emile Christensen,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00275,Simon Poulsen,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00276,Andreas Vestergaard,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00277,Joakim Skov,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00278,Rasmus Laursen,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00279,Mikkel Hansen,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00280,Kasper Hojbjerg,Denmark,Midfielder,2,Midfielder: Key passes + Passing
+P00281,Christian Skov,Denmark,Forward,0,Forward: Shots + Goals
+P00282,Pierre-Emile Laursen,Denmark,Forward,0,Forward: Shots + Goals
+P00283,Simon Hansen,Denmark,Forward,0,Forward: Shots + Goals
+P00284,Andreas Hojbjerg,Denmark,Forward,0,Forward: Shots + Goals
+P00285,Joakim Christensen,Denmark,Forward,0,Forward: Shots + Goals
+P00286,Rasmus Wind,Denmark,Forward,0,Forward: Shots + Goals
+P00287,Dusan Mitrovic,Serbia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00288,Aleksandar Savic,Serbia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00289,Filip Milinkovic-Savic,Serbia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00290,Dusan Gudelj,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00291,Aleksandar Kostic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00292,Filip Pavlovic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00293,Sergej Milenkovic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00294,Nemanja Lazovic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00295,Dusan Zivkovic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00296,Lazar Ilic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00297,Strahinja Ristic,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00298,Andrija Gudelj,Serbia,Defender,1,Defender: Clearances + Aerial duels
+P00299,Dusan Radonjic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00300,Aleksandar Lukic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00301,Filip Maksimovic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00302,Sergej Jovic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00303,Nemanja Jevtovic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00304,Dusan Terzic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00305,Lazar Grujic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00306,Strahinja Mitrovic,Serbia,Midfielder,2,Midfielder: Key passes + Passing
+P00307,Dusan Jevtovic,Serbia,Forward,0,Forward: Shots + Goals
+P00308,Aleksandar Terzic,Serbia,Forward,0,Forward: Shots + Goals
+P00309,Filip Grujic,Serbia,Forward,0,Forward: Shots + Goals
+P00310,Sergej Mitrovic,Serbia,Forward,0,Forward: Shots + Goals
+P00311,Nemanja Savic,Serbia,Forward,0,Forward: Shots + Goals
+P00312,Dusan Milinkovic-Savic,Serbia,Forward,0,Forward: Shots + Goals
+P00313,David Sabitzer,Austria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00314,Marcel Lainer,Austria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00315,Marko Baumgartlinger,Austria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00316,David Laimer,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00317,Marcel Kalajdzic,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00318,Marko Gregoritsch,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00319,Konrad Posch,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00320,Stefan Hinteregger,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00321,Maximilian Seiwald,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00322,Florian Waldschmidt,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00323,Xaver Kofler,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00324,Philipp Friedl,Austria,Defender,1,Defender: Clearances + Aerial duels
+P00325,David Ulmer,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00326,Marcel Dembir,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00327,Marko Borrmann,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00328,Konrad Bardi,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00329,Stefan Muhl,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00330,Maximilian Bavoli,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00331,Florian Kick,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00332,Xaver Sabitzer,Austria,Midfielder,2,Midfielder: Key passes + Passing
+P00333,David Muhl,Austria,Forward,0,Forward: Shots + Goals
+P00334,Marcel Bavoli,Austria,Forward,0,Forward: Shots + Goals
+P00335,Marko Kick,Austria,Forward,0,Forward: Shots + Goals
+P00336,Konrad Sabitzer,Austria,Forward,0,Forward: Shots + Goals
+P00337,Stefan Lainer,Austria,Forward,0,Forward: Shots + Goals
+P00338,Maximilian Baumgartlinger,Austria,Forward,0,Forward: Shots + Goals
+P00339,Robert Zielinski,Poland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00340,Piotr Glik,Poland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00341,Jan Milik,Poland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00342,Robert Krychowiak,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00343,Piotr Szymanski,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00344,Jan Bednarek,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00345,Arkadiusz Dawidowicz,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00346,Grzegorz Piatek,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00347,Krzysztof Grosicki,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00348,Mateusz Frankowski,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00349,Jakub Helik,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00350,Kamil Jozwiak,Poland,Defender,1,Defender: Clearances + Aerial duels
+P00351,Robert Swierczok,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00352,Piotr Cash,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00353,Jan Rybus,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00354,Arkadiusz Puchacz,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00355,Grzegorz Skoras,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00356,Krzysztof Urbański,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00357,Mateusz Kozlowski,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00358,Jakub Zielinski,Poland,Midfielder,2,Midfielder: Key passes + Passing
+P00359,Robert Skoras,Poland,Forward,0,Forward: Shots + Goals
+P00360,Piotr Urbański,Poland,Forward,0,Forward: Shots + Goals
+P00361,Jan Kozlowski,Poland,Forward,0,Forward: Shots + Goals
+P00362,Arkadiusz Zielinski,Poland,Forward,0,Forward: Shots + Goals
+P00363,Grzegorz Glik,Poland,Forward,0,Forward: Shots + Goals
+P00364,Krzysztof Milik,Poland,Forward,0,Forward: Shots + Goals
+P00365,Dejan Isak,Sweden,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00366,Alexander Lindelof,Sweden,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00367,Emil Olsson,Sweden,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00368,Dejan Augustinsson,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00369,Alexander Ekdal,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00370,Emil Berg,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00371,Viktor Krafth,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00372,Robin Björkman,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00373,Ludwig Elanga,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00374,Mattias Karlsson,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00375,Karl Kristoffersen,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00376,Filip Daka,Sweden,Defender,1,Defender: Clearances + Aerial duels
+P00377,Dejan Gustafson,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00378,Alexander Ndicka,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00379,Emil Garcia,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00380,Viktor Holm,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00381,Robin Wahlqvist,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00382,Ludwig Hiljemark,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00383,Mattias Ljungberg,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00384,Karl Isak,Sweden,Midfielder,2,Midfielder: Key passes + Passing
+P00385,Dejan Wahlqvist,Sweden,Forward,0,Forward: Shots + Goals
+P00386,Alexander Hiljemark,Sweden,Forward,0,Forward: Shots + Goals
+P00387,Emil Ljungberg,Sweden,Forward,0,Forward: Shots + Goals
+P00388,Viktor Isak,Sweden,Forward,0,Forward: Shots + Goals
+P00389,Robin Lindelof,Sweden,Forward,0,Forward: Shots + Goals
+P00390,Ludwig Olsson,Sweden,Forward,0,Forward: Shots + Goals
+P00391,Hakan Under,Turkey,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00392,Cengiz Soyuncu,Turkey,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00393,Merih Turan,Turkey,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00394,Hakan Yilmaz,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00395,Cengiz Kahveci,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00396,Merih Kokcu,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00397,Caglar Guler,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00398,Burak Tufan,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00399,Enes Celik,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00400,Yusuf Kilicsoy,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00401,Irfan Enes,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00402,Orkun Bayindir,Turkey,Defender,1,Defender: Clearances + Aerial duels
+P00403,Hakan Ucar,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00404,Cengiz Muldur,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00405,Merih Yildiz,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00406,Caglar Abdul,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00407,Burak Cengiz,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00408,Enes Gonul,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00409,Yusuf Unal,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00410,Irfan Under,Turkey,Midfielder,2,Midfielder: Key passes + Passing
+P00411,Hakan Cengiz,Turkey,Forward,0,Forward: Shots + Goals
+P00412,Cengiz Gonul,Turkey,Forward,0,Forward: Shots + Goals
+P00413,Merih Unal,Turkey,Forward,0,Forward: Shots + Goals
+P00414,Caglar Under,Turkey,Forward,0,Forward: Shots + Goals
+P00415,Burak Soyuncu,Turkey,Forward,0,Forward: Shots + Goals
+P00416,Enes Turan,Turkey,Forward,0,Forward: Shots + Goals
+P00417,Andriy Zinchenko,Ukraine,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00418,Oleksandr Tsygankov,Ukraine,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00419,Mykhailo Sudakov,Ukraine,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00420,Andriy Dovbyk,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00421,Oleksandr Shaparenko,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00422,Mykhailo Zabarnyi,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00423,Viktor Karavaev,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00424,Artem Lunin,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00425,Ruslan Makarenko,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00426,Yevhen Yaremchuk,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00427,Dmytro Kovalenko,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00428,Oleksiy Sobol,Ukraine,Defender,1,Defender: Clearances + Aerial duels
+P00429,Andriy Bushchan,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00430,Oleksandr Sydorchuk,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00431,Mykhailo Besedin,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00432,Viktor Stepanenko,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00433,Artem Bolbat,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00434,Ruslan Bondarenko,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00435,Yevhen Kryvtsov,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00436,Dmytro Zinchenko,Ukraine,Midfielder,2,Midfielder: Key passes + Passing
+P00437,Andriy Bolbat,Ukraine,Forward,0,Forward: Shots + Goals
+P00438,Oleksandr Bondarenko,Ukraine,Forward,0,Forward: Shots + Goals
+P00439,Mykhailo Kryvtsov,Ukraine,Forward,0,Forward: Shots + Goals
+P00440,Viktor Zinchenko,Ukraine,Forward,0,Forward: Shots + Goals
+P00441,Artem Tsygankov,Ukraine,Forward,0,Forward: Shots + Goals
+P00442,Ruslan Sudakov,Ukraine,Forward,0,Forward: Shots + Goals
+P00443,Andrew McTominay,Scotland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00444,Scott McGregor,Scotland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00445,John Gilmour,Scotland,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00446,Andrew Adams,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00447,Scott Patterson,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00448,John Hanley,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00449,Stuart Hendry,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00450,Graeme Doak,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00451,Liam Turnbull,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00452,Ryan Forrest,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00453,Callum Christie,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00454,Kieran Dykes,Scotland,Defender,1,Defender: Clearances + Aerial duels
+P00455,Andrew Ferguson,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00456,Scott Lewis,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00457,John Armstrong,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00458,Stuart Shankland,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00459,Graeme Jack,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00460,Liam Gallagher,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00461,Ryan Clark,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00462,Callum McTominay,Scotland,Midfielder,2,Midfielder: Key passes + Passing
+P00463,Andrew Jack,Scotland,Forward,0,Forward: Shots + Goals
+P00464,Scott Gallagher,Scotland,Forward,0,Forward: Shots + Goals
+P00465,John Clark,Scotland,Forward,0,Forward: Shots + Goals
+P00466,Stuart McTominay,Scotland,Forward,0,Forward: Shots + Goals
+P00467,Graeme McGregor,Scotland,Forward,0,Forward: Shots + Goals
+P00468,Liam Gilmour,Scotland,Forward,0,Forward: Shots + Goals
+P00469,Neymar Junior,Brazil,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00470,Vinicius Martins,Brazil,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00471,Rodrygo Paqueta,Brazil,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00472,Neymar Mendes,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00473,Vinicius Guimaraes,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00474,Rodrygo Fabinho,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00475,Gabriel Alisson,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00476,Casemiro Alexandre,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00477,Marquinhos Santos,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00478,Alisson Oliveira,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00479,Richarlison Ferreira,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00480,Bruno Lima,Brazil,Defender,1,Defender: Clearances + Aerial duels
+P00481,Neymar Pereira,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00482,Vinicius Moreira,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00483,Rodrygo Costa,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00484,Gabriel Souza,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00485,Casemiro Carvalho,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00486,Marquinhos Nunes,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00487,Alisson Reis,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00488,Richarlison Junior,Brazil,Midfielder,2,Midfielder: Key passes + Passing
+P00489,Neymar Carvalho,Brazil,Forward,0,Forward: Shots + Goals
+P00490,Vinicius Nunes,Brazil,Forward,0,Forward: Shots + Goals
+P00491,Rodrygo Reis,Brazil,Forward,0,Forward: Shots + Goals
+P00492,Gabriel Junior,Brazil,Forward,0,Forward: Shots + Goals
+P00493,Casemiro Martins,Brazil,Forward,0,Forward: Shots + Goals
+P00494,Marquinhos Paqueta,Brazil,Forward,0,Forward: Shots + Goals
+P00495,Lionel Alvarez,Argentina,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00496,Julian De Paul,Argentina,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00497,Emiliano Di Maria,Argentina,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00498,Lionel Martinez,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00499,Julian Paredes,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00500,Emiliano Mac Allister,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00501,Rodrigo Lo Celso,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00502,Lautaro Tagliafico,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00503,Angel Gonzalez,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00504,Leandro Pezzella,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00505,Nahuel Correa,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00506,Alexis Almada,Argentina,Defender,1,Defender: Clearances + Aerial duels
+P00507,Lionel Montiel,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00508,Julian Dybala,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00509,Emiliano Acuna,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00510,Rodrigo Fernandez,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00511,Lautaro Sosa,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00512,Angel Garay,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00513,Leandro Balerdi,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00514,Nahuel Alvarez,Argentina,Midfielder,2,Midfielder: Key passes + Passing
+P00515,Lionel Sosa,Argentina,Forward,0,Forward: Shots + Goals
+P00516,Julian Garay,Argentina,Forward,0,Forward: Shots + Goals
+P00517,Emiliano Balerdi,Argentina,Forward,0,Forward: Shots + Goals
+P00518,Rodrigo Alvarez,Argentina,Forward,0,Forward: Shots + Goals
+P00519,Lautaro De Paul,Argentina,Forward,0,Forward: Shots + Goals
+P00520,Angel Di Maria,Argentina,Forward,0,Forward: Shots + Goals
+P00521,Luis Rodriguez,Colombia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00522,James Mina,Colombia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00523,Duvan Cuadrado,Colombia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00524,Luis Sanchez,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00525,James Ospina,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00526,Duvan Lerma,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00527,Yerry Barrios,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00528,Davinson Borja,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00529,Juan Quintero,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00530,Radamel Cuesta,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00531,Jefferson Chara,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00532,David Lucumi,Colombia,Defender,1,Defender: Clearances + Aerial duels
+P00533,Luis Sinisterra,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00534,James Morelos,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00535,Duvan Tesillo,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00536,Yerry Cantillo,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00537,Davinson Villa,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00538,Juan Munoz,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00539,Radamel Rios,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00540,Jefferson Rodriguez,Colombia,Midfielder,2,Midfielder: Key passes + Passing
+P00541,Luis Villa,Colombia,Forward,0,Forward: Shots + Goals
+P00542,James Munoz,Colombia,Forward,0,Forward: Shots + Goals
+P00543,Duvan Rios,Colombia,Forward,0,Forward: Shots + Goals
+P00544,Yerry Rodriguez,Colombia,Forward,0,Forward: Shots + Goals
+P00545,Davinson Mina,Colombia,Forward,0,Forward: Shots + Goals
+P00546,Juan Cuadrado,Colombia,Forward,0,Forward: Shots + Goals
+P00547,Alexis Vidal,Chile,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00548,Arturo Brereton,Chile,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00549,Gary Isla,Chile,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00550,Alexis Pulgar,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00551,Arturo Aranguiz,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00552,Gary Diaz,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00553,Ben Sierralta,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00554,Erick Mena,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00555,Mauricio Montes,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00556,Jean Zavala,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00557,Paulo Albornoz,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00558,Claudio Pavez,Chile,Defender,1,Defender: Clearances + Aerial duels
+P00559,Alexis Lasarte,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00560,Arturo Fuentes,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00561,Gary Villanueva,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00562,Ben Castillo,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00563,Erick Valdivia,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00564,Mauricio Riquelme,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00565,Jean Delgado,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00566,Paulo Vidal,Chile,Midfielder,2,Midfielder: Key passes + Passing
+P00567,Alexis Valdivia,Chile,Forward,0,Forward: Shots + Goals
+P00568,Arturo Riquelme,Chile,Forward,0,Forward: Shots + Goals
+P00569,Gary Delgado,Chile,Forward,0,Forward: Shots + Goals
+P00570,Ben Vidal,Chile,Forward,0,Forward: Shots + Goals
+P00571,Erick Brereton,Chile,Forward,0,Forward: Shots + Goals
+P00572,Mauricio Isla,Chile,Forward,0,Forward: Shots + Goals
+P00573,Luis Cavani,Uruguay,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00574,Edinson Gimenez,Uruguay,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00575,Federico Bentancur,Uruguay,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00576,Luis Araujo,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00577,Edinson Nandez,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00578,Federico Coates,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00579,Jose Torreira,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00580,Ronald De Arrascaeta,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00581,Sebastian Nunez,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00582,Rodrigo Olivera,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00583,Diego Vina,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00584,Nahitan Canobbio,Uruguay,Defender,1,Defender: Clearances + Aerial duels
+P00585,Luis Pellistri,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00586,Edinson Ugarte,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00587,Federico Caceres,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00588,Jose Rodriguez,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00589,Ronald Varela,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00590,Sebastian Torres,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00591,Rodrigo Trezeguet,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00592,Diego Cavani,Uruguay,Midfielder,2,Midfielder: Key passes + Passing
+P00593,Luis Varela,Uruguay,Forward,0,Forward: Shots + Goals
+P00594,Edinson Torres,Uruguay,Forward,0,Forward: Shots + Goals
+P00595,Federico Trezeguet,Uruguay,Forward,0,Forward: Shots + Goals
+P00596,Jose Cavani,Uruguay,Forward,0,Forward: Shots + Goals
+P00597,Ronald Gimenez,Uruguay,Forward,0,Forward: Shots + Goals
+P00598,Sebastian Bentancur,Uruguay,Forward,0,Forward: Shots + Goals
+P00599,Enner Caicedo,Ecuador,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00600,Moises Mena,Ecuador,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00601,Pervis Preciado,Ecuador,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00602,Enner Hincapie,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00603,Moises Torres,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00604,Pervis Gruezo,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00605,Angel Plata,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00606,Gonzalo Ramirez,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00607,Sebastian Angulo,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00608,Diego Pacho,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00609,Felix Rodriguez,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00610,Jackson Canga,Ecuador,Defender,1,Defender: Clearances + Aerial duels
+P00611,Enner Ibarra,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00612,Moises Minda,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00613,Pervis Palacios,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00614,Angel Intriago,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00615,Gonzalo Zapata,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00616,Sebastian Pellerano,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00617,Diego Molina,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00618,Felix Caicedo,Ecuador,Midfielder,2,Midfielder: Key passes + Passing
+P00619,Enner Zapata,Ecuador,Forward,0,Forward: Shots + Goals
+P00620,Moises Pellerano,Ecuador,Forward,0,Forward: Shots + Goals
+P00621,Pervis Molina,Ecuador,Forward,0,Forward: Shots + Goals
+P00622,Angel Caicedo,Ecuador,Forward,0,Forward: Shots + Goals
+P00623,Gonzalo Mena,Ecuador,Forward,0,Forward: Shots + Goals
+P00624,Sebastian Preciado,Ecuador,Forward,0,Forward: Shots + Goals
+P00625,Paolo Lapadula,Peru,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00626,Gianluca Advincula,Peru,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00627,Pedro Cueva,Peru,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00628,Paolo Carrillo,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00629,Gianluca Tapia,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00630,Pedro Callens,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00631,Luis Abram,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00632,André Yotun,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00633,Christian Valera,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00634,Renato Traverso,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00635,Sergio Lora,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00636,Alexander Hohberg,Peru,Defender,1,Defender: Clearances + Aerial duels
+P00637,Paolo Flores,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00638,Gianluca Peña,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00639,Pedro Garcia,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00640,Luis Cartagena,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00641,André Gonzalez,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00642,Christian Urruti,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00643,Renato Lliuya,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00644,Sergio Lapadula,Peru,Midfielder,2,Midfielder: Key passes + Passing
+P00645,Paolo Gonzalez,Peru,Forward,0,Forward: Shots + Goals
+P00646,Gianluca Urruti,Peru,Forward,0,Forward: Shots + Goals
+P00647,Pedro Lliuya,Peru,Forward,0,Forward: Shots + Goals
+P00648,Luis Lapadula,Peru,Forward,0,Forward: Shots + Goals
+P00649,André Advincula,Peru,Forward,0,Forward: Shots + Goals
+P00650,Christian Cueva,Peru,Forward,0,Forward: Shots + Goals
+P00651,Christian McKennie,United States,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00652,Weston Adams,United States,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00653,Giovanni Weah,United States,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00654,Christian Robinson,United States,Defender,1,Defender: Clearances + Aerial duels
+P00655,Weston Dest,United States,Defender,1,Defender: Clearances + Aerial duels
+P00656,Giovanni Musah,United States,Defender,1,Defender: Clearances + Aerial duels
+P00657,Tyler Balogan,United States,Defender,1,Defender: Clearances + Aerial duels
+P00658,Antonee Carter-Vickers,United States,Defender,1,Defender: Clearances + Aerial duels
+P00659,Timothy Zimmerman,United States,Defender,1,Defender: Clearances + Aerial duels
+P00660,Sergino Busio,United States,Defender,1,Defender: Clearances + Aerial duels
+P00661,Brenden Pepi,United States,Defender,1,Defender: Clearances + Aerial duels
+P00662,Yunus Robinson,United States,Defender,1,Defender: Clearances + Aerial duels
+P00663,Christian Sargent,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00664,Weston Acosta,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00665,Giovanni Tillman,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00666,Tyler Morris,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00667,Antonee Horvath,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00668,Timothy Yedlin,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00669,Sergino Hoppe,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00670,Brenden McKennie,United States,Midfielder,2,Midfielder: Key passes + Passing
+P00671,Christian Horvath,United States,Forward,0,Forward: Shots + Goals
+P00672,Weston Yedlin,United States,Forward,0,Forward: Shots + Goals
+P00673,Giovanni Hoppe,United States,Forward,0,Forward: Shots + Goals
+P00674,Tyler McKennie,United States,Forward,0,Forward: Shots + Goals
+P00675,Antonee Adams,United States,Forward,0,Forward: Shots + Goals
+P00676,Timothy Weah,United States,Forward,0,Forward: Shots + Goals
+P00677,Santiago Lozano,Mexico,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00678,Hirving Alvarez,Mexico,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00679,Raul Lainez,Mexico,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00680,Santiago Corona,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00681,Hirving Ochoa,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00682,Raul Herrera,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00683,Edson Layun,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00684,Jesus Gutierrez,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00685,Diego Vega,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00686,Guillermo Almada,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00687,Jorge Cordova,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00688,Hector Vasquez,Mexico,Defender,1,Defender: Clearances + Aerial duels
+P00689,Santiago Araujo,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00690,Hirving Pineda,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00691,Raul Antuna,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00692,Edson Martinez,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00693,Jesus Reyes,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00694,Diego Romo,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00695,Guillermo Torres,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00696,Jorge Lozano,Mexico,Midfielder,2,Midfielder: Key passes + Passing
+P00697,Santiago Reyes,Mexico,Forward,0,Forward: Shots + Goals
+P00698,Hirving Romo,Mexico,Forward,0,Forward: Shots + Goals
+P00699,Raul Torres,Mexico,Forward,0,Forward: Shots + Goals
+P00700,Edson Lozano,Mexico,Forward,0,Forward: Shots + Goals
+P00701,Jesus Alvarez,Mexico,Forward,2,Midfielder: Key passes + Passing
+P00702,Diego Lainez,Mexico,Forward,0,Forward: Shots + Goals
+P00703,Alphonso David,Canada,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00704,Jonathan Eustaquio,Canada,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00705,Cyle Buchanan,Canada,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00706,Alphonso Johnston,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00707,Jonathan Adekugbe,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00708,Cyle Borjan,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00709,Stephen Miller,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00710,Alistair Fraser,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00711,Tajon Utoikamanu,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00712,Sam Hoilett,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00713,Liam Cornelius,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00714,Richie Bomba,Canada,Defender,1,Defender: Clearances + Aerial duels
+P00715,Alphonso Wotherspoon,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00716,Jonathan Cavallini,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00717,Cyle Waterman,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00718,Stephen Kennedy,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00719,Alistair Piette,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00720,Tajon Zator,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00721,Sam James,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00722,Liam David,Canada,Midfielder,2,Midfielder: Key passes + Passing
+P00723,Alphonso Piette,Canada,Forward,0,Forward: Shots + Goals
+P00724,Jonathan Zator,Canada,Forward,0,Forward: Shots + Goals
+P00725,Cyle James,Canada,Forward,0,Forward: Shots + Goals
+P00726,Stephen David,Canada,Forward,0,Forward: Shots + Goals
+P00727,Alistair Eustaquio,Canada,Forward,0,Forward: Shots + Goals
+P00728,Tajon Buchanan,Canada,Forward,0,Forward: Shots + Goals
+P00729,Keylor Campbell,Costa Rica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00730,Joel Borges,Costa Rica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00731,Bryan Duarte,Costa Rica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00732,Keylor Calvo,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00733,Joel Oviedo,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00734,Bryan Matarrita,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00735,Celso Tejeda,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00736,Francisco Wallace,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00737,Randal Brenes,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00738,Patrick Alvarado,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00739,Oscar Chacon,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00740,Ronald Haxiel,Costa Rica,Defender,1,Defender: Clearances + Aerial duels
+P00741,Keylor Watson,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00742,Joel Soto,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00743,Bryan Leiton,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00744,Celso Zuniga,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00745,Francisco Aguilar,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00746,Randal Salas,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00747,Patrick Vargas,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00748,Oscar Campbell,Costa Rica,Midfielder,2,Midfielder: Key passes + Passing
+P00749,Keylor Aguilar,Costa Rica,Forward,0,Forward: Shots + Goals
+P00750,Joel Salas,Costa Rica,Forward,0,Forward: Shots + Goals
+P00751,Bryan Vargas,Costa Rica,Forward,0,Forward: Shots + Goals
+P00752,Celso Campbell,Costa Rica,Forward,0,Forward: Shots + Goals
+P00753,Francisco Borges,Costa Rica,Forward,0,Forward: Shots + Goals
+P00754,Randal Duarte,Costa Rica,Forward,0,Forward: Shots + Goals
+P00755,Leon Antonio,Jamaica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00756,Michail Gray,Jamaica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00757,Bobby Hector,Jamaica,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00758,Leon Lowe,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00759,Michail Pinnock,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00760,Bobby Lawrence,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00761,Andre Johnson,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00762,Damion Marshall,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00763,Kasey Dickinson,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00764,Adrian Simpson,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00765,Shamar Gordon,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00766,Alvas Holness,Jamaica,Defender,1,Defender: Clearances + Aerial duels
+P00767,Leon Grant,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00768,Michail McCarey,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00769,Bobby Lambert,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00770,Andre Ricketts,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00771,Damion Bishop,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00772,Kasey Williams,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00773,Adrian Rodrigues,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00774,Shamar Antonio,Jamaica,Midfielder,2,Midfielder: Key passes + Passing
+P00775,Leon Bishop,Jamaica,Forward,0,Forward: Shots + Goals
+P00776,Michail Williams,Jamaica,Forward,0,Forward: Shots + Goals
+P00777,Bobby Rodrigues,Jamaica,Forward,0,Forward: Shots + Goals
+P00778,Andre Antonio,Jamaica,Forward,0,Forward: Shots + Goals
+P00779,Damion Gray,Jamaica,Forward,0,Forward: Shots + Goals
+P00780,Kasey Hector,Jamaica,Forward,0,Forward: Shots + Goals
+P00781,Anibal Rodriguez,Panama,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00782,Jose Davis,Panama,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00783,Michael Cooper,Panama,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00784,Anibal Barcenas,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00785,Jose Omar,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00786,Michael Escobar,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00787,Eric Aguilar,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00788,Abdiel Martinez,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00789,Armando Cummings,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00790,Harold Valenzuela,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00791,Cesar Rojas,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00792,Yoel Rodriguez,Panama,Defender,1,Defender: Clearances + Aerial duels
+P00793,Anibal Perez,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00794,Jose Gomez,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00795,Michael Gonzalez,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00796,Eric Ortiz,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00797,Abdiel Sanchez,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00798,Armando Torres,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00799,Harold Brown,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00800,Cesar Rodriguez,Panama,Midfielder,2,Midfielder: Key passes + Passing
+P00801,Anibal Sanchez,Panama,Forward,0,Forward: Shots + Goals
+P00802,Jose Torres,Panama,Forward,0,Forward: Shots + Goals
+P00803,Michael Brown,Panama,Forward,0,Forward: Shots + Goals
+P00804,Eric Rodriguez,Panama,Forward,0,Forward: Shots + Goals
+P00805,Abdiel Davis,Panama,Forward,0,Forward: Shots + Goals
+P00806,Armando Cooper,Panama,Forward,0,Forward: Shots + Goals
+P00807,Daichi Kubo,Japan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00808,Takefusa Endo,Japan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00809,Kaoru Kamada,Japan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00810,Daichi Doan,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00811,Takefusa Tanaka,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00812,Kaoru Yoshida,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00813,Wataru Itakura,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00814,Ritsu Ito,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00815,Junya Furuhashi,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00816,Ao Mori,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00817,Ayase Suzuki,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00818,Hiroki Ogawa,Japan,Defender,1,Defender: Clearances + Aerial duels
+P00819,Daichi Asano,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00820,Takefusa Hatate,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00821,Kaoru Machida,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00822,Wataru Ueda,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00823,Ritsu Hashioka,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00824,Junya Nakano,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00825,Ao Shiotani,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00826,Ayase Kubo,Japan,Midfielder,2,Midfielder: Key passes + Passing
+P00827,Daichi Hashioka,Japan,Forward,0,Forward: Shots + Goals
+P00828,Takefusa Nakano,Japan,Forward,0,Forward: Shots + Goals
+P00829,Kaoru Shiotani,Japan,Forward,0,Forward: Shots + Goals
+P00830,Wataru Kubo,Japan,Forward,0,Forward: Shots + Goals
+P00831,Ritsu Endo,Japan,Forward,0,Forward: Shots + Goals
+P00832,Junya Kamada,Japan,Forward,0,Forward: Shots + Goals
+P00833,Son Hwang,South Korea,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00834,Hee-chan Hwang,South Korea,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00835,Min-jae Son,South Korea,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00836,Son Lee,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00837,Hee-chan Hwang,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00838,Min-jae Kim,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00839,Jae-sung Park,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00840,In-beom Jung,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00841,Hwang Oh,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00842,Woo-young Na,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00843,Young-woo Jeong,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00844,Seung-gyu Lee,South Korea,Defender,1,Defender: Clearances + Aerial duels
+P00845,Son Hong,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00846,Hee-chan Kwon,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00847,Min-jae Song,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00848,Jae-sung Yang,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00849,In-beom Seol,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00850,Hwang Choi,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00851,Woo-young Ji,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00852,Young-woo Hwang,South Korea,Midfielder,2,Midfielder: Key passes + Passing
+P00853,Son Seol,South Korea,Forward,0,Forward: Shots + Goals
+P00854,Hee-chan Choi,South Korea,Forward,0,Forward: Shots + Goals
+P00855,Min-jae Ji,South Korea,Forward,0,Forward: Shots + Goals
+P00856,Jae-sung Hwang,South Korea,Forward,0,Forward: Shots + Goals
+P00857,In-beom Hwang,South Korea,Forward,0,Forward: Shots + Goals
+P00858,Hwang Son,South Korea,Forward,0,Forward: Shots + Goals
+P00859,Mehdi Azmoun,Iran,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00860,Sardar Ghoddos,Iran,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00861,Alireza Hosseini,Iran,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00862,Mehdi Hajsafi,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00863,Sardar Ansarifard,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00864,Alireza Rezaeian,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00865,Saman Torabi,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00866,Hidajat Noorollahi,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00867,Ehsan Gholizadeh,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00868,Karim Dejagah,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00869,Morteza Karimi,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00870,Ramin Moharrami,Iran,Defender,1,Defender: Clearances + Aerial duels
+P00871,Mehdi Arefi,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00872,Sardar Heydari,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00873,Alireza Shojaei,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00874,Saman Abdollahzadeh,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00875,Hidajat Hazbavi,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00876,Ehsan Moradi,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00877,Karim Nourollahi,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00878,Morteza Azmoun,Iran,Midfielder,2,Midfielder: Key passes + Passing
+P00879,Mehdi Hazbavi,Iran,Forward,0,Forward: Shots + Goals
+P00880,Sardar Moradi,Iran,Forward,0,Forward: Shots + Goals
+P00881,Alireza Nourollahi,Iran,Forward,0,Forward: Shots + Goals
+P00882,Saman Azmoun,Iran,Forward,0,Forward: Shots + Goals
+P00883,Hidajat Ghoddos,Iran,Forward,0,Forward: Shots + Goals
+P00884,Ehsan Hosseini,Iran,Forward,0,Forward: Shots + Goals
+P00885,Salem Al-Buraikan,Saudi Arabia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00886,Firas Al-Shahrani,Saudi Arabia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00887,Saleh Al-Otaibi,Saudi Arabia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00888,Salem Al-Faraj,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00889,Firas Al-Amri,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00890,Saleh Al-Ghamdi,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00891,Yasser Al-Owais,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00892,Mohammed Al-Breik,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00893,Abdulrahman Al-Hamdan,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00894,Hassan Al-Zahrani,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00895,Ali Al-Ghannam,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00896,Sultan Al-Mousa,Saudi Arabia,Defender,1,Defender: Clearances + Aerial duels
+P00897,Salem Al-Tambakti,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00898,Firas Al-Yami,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00899,Saleh Al-Abdulkarim,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00900,Yasser Al-Harbi,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00901,Mohammed Al-Rubaie,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00902,Abdulrahman Al-Salem,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00903,Hassan Al-Qahtani,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00904,Ali Al-Buraikan,Saudi Arabia,Midfielder,2,Midfielder: Key passes + Passing
+P00905,Salem Al-Rubaie,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00906,Firas Al-Salem,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00907,Saleh Al-Qahtani,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00908,Yasser Al-Buraikan,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00909,Mohammed Al-Shahrani,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00910,Abdulrahman Al-Otaibi,Saudi Arabia,Forward,0,Forward: Shots + Goals
+P00911,Mathew Mooy,Australia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00912,Aaron Souttar,Australia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00913,Jackson Duke,Australia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00914,Mathew Behich,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00915,Aaron Goodwin,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00916,Jackson Baccus,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00917,Harry Leckie,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00918,Ajdin Rogic,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00919,Keanu McGree,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00920,Awer Tilio,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00921,Craig Borges,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00922,Mat Cummins,Australia,Defender,1,Defender: Clearances + Aerial duels
+P00923,Mathew Boyle,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00924,Aaron Metcalfe,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00925,Jackson Kusini,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00926,Harry King,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00927,Ajdin Jones,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00928,Keanu Wright,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00929,Awer Vukovic,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00930,Craig Mooy,Australia,Midfielder,2,Midfielder: Key passes + Passing
+P00931,Mathew Jones,Australia,Forward,0,Forward: Shots + Goals
+P00932,Aaron Wright,Australia,Forward,0,Forward: Shots + Goals
+P00933,Jackson Vukovic,Australia,Forward,0,Forward: Shots + Goals
+P00934,Harry Mooy,Australia,Forward,0,Forward: Shots + Goals
+P00935,Ajdin Souttar,Australia,Forward,0,Forward: Shots + Goals
+P00936,Keanu Duke,Australia,Forward,0,Forward: Shots + Goals
+P00937,Akram Ali,Qatar,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00938,Almoez Boudiaf,Qatar,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00939,Hassan Abdulla,Qatar,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00940,Akram Hatem,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00941,Almoez Muntari,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00942,Hassan Pedro,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00943,Boualem Hasan,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00944,Karim Barsham,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00945,Abdelaziz Ismaeel,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00946,Ahmed Al-Dosari,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00947,Ali Abdelaziz,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00948,Mohammed Al-Hammadi,Qatar,Defender,1,Defender: Clearances + Aerial duels
+P00949,Akram Mesa,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00950,Almoez Al-Attiyah,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00951,Hassan Al-Nobi,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00952,Boualem Moez,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00953,Karim Al-Ahmad,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00954,Abdelaziz Al-Mohannadi,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00955,Ahmed Mahmoud,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00956,Ali Ali,Qatar,Midfielder,2,Midfielder: Key passes + Passing
+P00957,Akram Al-Ahmad,Qatar,Forward,0,Forward: Shots + Goals
+P00958,Almoez Al-Mohannadi,Qatar,Forward,0,Forward: Shots + Goals
+P00959,Hassan Mahmoud,Qatar,Forward,0,Forward: Shots + Goals
+P00960,Boualem Ali,Qatar,Forward,0,Forward: Shots + Goals
+P00961,Karim Boudiaf,Qatar,Forward,0,Forward: Shots + Goals
+P00962,Abdelaziz Abdulla,Qatar,Forward,0,Forward: Shots + Goals
+P00963,Eldor Rashidov,Uzbekistan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00964,Sardor Kobilov,Uzbekistan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00965,Otabek Nasrullaev,Uzbekistan,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00966,Eldor Hamrobekov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00967,Sardor Zakirov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00968,Otabek Yoldoshev,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00969,Jaloliddin Tursunov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00970,Dostonbek Abdurakhmanov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00971,Husniddin Umarov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00972,Azizbek Yusupov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00973,Bobir Eshmurodov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00974,Jasurbek Alijanov,Uzbekistan,Defender,1,Defender: Clearances + Aerial duels
+P00975,Eldor Miralimov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00976,Sardor Holmatov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00977,Otabek Karimov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00978,Jaloliddin Sobirov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00979,Dostonbek Kenjayev,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00980,Husniddin Nematov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00981,Azizbek Sattorov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00982,Bobir Rashidov,Uzbekistan,Midfielder,2,Midfielder: Key passes + Passing
+P00983,Eldor Kenjayev,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00984,Sardor Nematov,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00985,Otabek Sattorov,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00986,Jaloliddin Rashidov,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00987,Dostonbek Kobilov,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00988,Husniddin Nasrullaev,Uzbekistan,Forward,0,Forward: Shots + Goals
+P00989,Mohannad Hussein,Iraq,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00990,Aymen Adnan,Iraq,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00991,Ibrahim Mhawi,Iraq,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P00992,Mohannad Al-Amiri,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00993,Aymen Attwan,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00994,Ibrahim Daoud,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00995,Ali Mohanad,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00996,Amir Younis,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00997,Safaa Abbas,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00998,Hussein Ibrahim,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P00999,Ahmed Moutan,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P01000,Mustafa Natiq,Iraq,Defender,1,Defender: Clearances + Aerial duels
+P01001,Mohannad Al-Saadi,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01002,Aymen Kasid,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01003,Ibrahim Taher,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01004,Ali Al-Timimi,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01005,Amir Majeed,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01006,Safaa Al-Khafaji,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01007,Hussein Sadiq,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01008,Ahmed Hussein,Iraq,Midfielder,2,Midfielder: Key passes + Passing
+P01009,Mohannad Majeed,Iraq,Forward,0,Forward: Shots + Goals
+P01010,Aymen Al-Khafaji,Iraq,Forward,0,Forward: Shots + Goals
+P01011,Ibrahim Sadiq,Iraq,Forward,0,Forward: Shots + Goals
+P01012,Ali Hussein,Iraq,Forward,0,Forward: Shots + Goals
+P01013,Amir Adnan,Iraq,Forward,0,Forward: Shots + Goals
+P01014,Safaa Mhawi,Iraq,Forward,0,Forward: Shots + Goals
+P01015,Sadio Koulibaly,Senegal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01016,Kalidou Mendy,Senegal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01017,Idrissa Sarr,Senegal,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01018,Sadio Diatta,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01019,Kalidou Mendy,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01020,Idrissa N'Diaye,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01021,Edouard Cisse,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01022,Boulaye Niang,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01023,Pape Gomis,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01024,Ferland Sow,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01025,Ismaila Ba,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01026,Moussa Fall,Senegal,Defender,1,Defender: Clearances + Aerial duels
+P01027,Sadio Sabaly,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01028,Kalidou Diallo,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01029,Idrissa Dia,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01030,Edouard Ndiaye,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01031,Boulaye Diouf,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01032,Pape Faye,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01033,Ferland Seck,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01034,Ismaila Koulibaly,Senegal,Midfielder,2,Midfielder: Key passes + Passing
+P01035,Sadio Diouf,Senegal,Forward,0,Forward: Shots + Goals
+P01036,Kalidou Faye,Senegal,Forward,0,Forward: Shots + Goals
+P01037,Idrissa Seck,Senegal,Forward,0,Forward: Shots + Goals
+P01038,Edouard Koulibaly,Senegal,Forward,0,Forward: Shots + Goals
+P01039,Boulaye Mendy,Senegal,Forward,0,Forward: Shots + Goals
+P01040,Pape Sarr,Senegal,Forward,0,Forward: Shots + Goals
+P01041,Achraf Saiss,Morocco,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01042,Romain Amrabat,Morocco,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01043,Nayef Ziyech,Morocco,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01044,Achraf Bounou,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01045,Romain Mazraoui,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01046,Nayef Boufal,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01047,Sofyan Hakimi,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01048,Yassine Dari,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01049,Hakim Ezzalzouli,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01050,Noussair El Khannouss,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01051,Selim Benoun,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01052,Azzedine Riad,Morocco,Defender,1,Defender: Clearances + Aerial duels
+P01053,Achraf Amellah,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01054,Romain Aboukhlal,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01055,Nayef Saibari,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01056,Sofyan Chair,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01057,Yassine El Yamiq,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01058,Hakim Aguerd,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01059,Noussair Chibi,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01060,Selim Saiss,Morocco,Midfielder,2,Midfielder: Key passes + Passing
+P01061,Achraf El Yamiq,Morocco,Forward,0,Forward: Shots + Goals
+P01062,Romain Aguerd,Morocco,Forward,0,Forward: Shots + Goals
+P01063,Nayef Chibi,Morocco,Forward,0,Forward: Shots + Goals
+P01064,Sofyan Saiss,Morocco,Forward,0,Forward: Shots + Goals
+P01065,Yassine Amrabat,Morocco,Forward,0,Forward: Shots + Goals
+P01066,Hakim Ziyech,Morocco,Forward,0,Forward: Shots + Goals
+P01067,Victor Chukwueze,Nigeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01068,Samuel Iwobi,Nigeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01069,Wilfred Okafor,Nigeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01070,Victor Aribo,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01071,Samuel Simon,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01072,Wilfred Moffi,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01073,Alex Ekong,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01074,Joe Aina,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01075,Calvin Sanusi,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01076,Moses Nwabili,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01077,Ademola Dessers,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01078,Terem Bassey,Nigeria,Defender,1,Defender: Clearances + Aerial duels
+P01079,Victor Ola-Aina,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01080,Samuel Uzoho,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01081,Wilfred Iheanacho,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01082,Alex Awoniyi,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01083,Joe Ajayi,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01084,Calvin Ejuke,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01085,Moses Agbadou,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01086,Ademola Chukwueze,Nigeria,Midfielder,2,Midfielder: Key passes + Passing
+P01087,Victor Ajayi,Nigeria,Forward,0,Forward: Shots + Goals
+P01088,Samuel Ejuke,Nigeria,Forward,0,Forward: Shots + Goals
+P01089,Wilfred Agbadou,Nigeria,Forward,0,Forward: Shots + Goals
+P01090,Alex Chukwueze,Nigeria,Forward,0,Forward: Shots + Goals
+P01091,Joe Iwobi,Nigeria,Forward,0,Forward: Shots + Goals
+P01092,Calvin Okafor,Nigeria,Forward,0,Forward: Shots + Goals
+P01093,Mohammed Partey,Ghana,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01094,Thomas Ayew,Ghana,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01095,Jordan Williams,Ghana,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01096,Mohammed Sulemana,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01097,Thomas Djiku,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01098,Jordan Baba,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01099,Andre Kudus,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01100,Kamaldeen Barnieh,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01101,Inaki Seidu,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01102,Alexander Abubakari,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01103,Daniel Lens,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01104,Osman Mensah,Ghana,Defender,1,Defender: Clearances + Aerial duels
+P01105,Mohammed Otoo,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01106,Thomas Rahman,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01107,Jordan Kasim,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01108,Andre Osabutey,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01109,Kamaldeen Attiogbe,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01110,Inaki Asante,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01111,Alexander Issahaku,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01112,Daniel Partey,Ghana,Midfielder,2,Midfielder: Key passes + Passing
+P01113,Mohammed Attiogbe,Ghana,Forward,0,Forward: Shots + Goals
+P01114,Thomas Asante,Ghana,Forward,0,Forward: Shots + Goals
+P01115,Jordan Issahaku,Ghana,Forward,0,Forward: Shots + Goals
+P01116,Andre Partey,Ghana,Forward,0,Forward: Shots + Goals
+P01117,Kamaldeen Ayew,Ghana,Forward,0,Forward: Shots + Goals
+P01118,Inaki Williams,Ghana,Forward,0,Forward: Shots + Goals
+P01119,Samuel Choupo-Moting,Cameroon,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01120,Eric Aboubakar,Cameroon,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01121,Andre Anguissa,Cameroon,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01122,Samuel Toko-Ekambi,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01123,Eric Zambo,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01124,Andre Nkoulou,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01125,Vincent Castelleto,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01126,Karl Mbeumo,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01127,Nicolas Siani,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01128,Jean Ondoa,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01129,Moumi Hongla,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01130,Martin Njie,Cameroon,Defender,1,Defender: Clearances + Aerial duels
+P01131,Samuel Moumi,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01132,Eric Ndip,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01133,Andre Kunde,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01134,Vincent Lea,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01135,Karl Olinga,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01136,Nicolas Mba,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01137,Jean Bassogog,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01138,Moumi Choupo-Moting,Cameroon,Midfielder,2,Midfielder: Key passes + Passing
+P01139,Samuel Olinga,Cameroon,Forward,0,Forward: Shots + Goals
+P01140,Eric Mba,Cameroon,Forward,0,Forward: Shots + Goals
+P01141,Andre Bassogog,Cameroon,Forward,0,Forward: Shots + Goals
+P01142,Vincent Choupo-Moting,Cameroon,Forward,0,Forward: Shots + Goals
+P01143,Karl Aboubakar,Cameroon,Forward,0,Forward: Shots + Goals
+P01144,Nicolas Anguissa,Cameroon,Forward,0,Forward: Shots + Goals
+P01145,Wahbi Msakni,Tunisia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01146,Youssef Skhiri,Tunisia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01147,Ali Talbi,Tunisia,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01148,Wahbi Bronn,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01149,Youssef Laidouni,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01150,Ali Dhaouadi,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01151,Ellyes Sliti,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01152,Nader Haddadi,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01153,Hannibal Mathlouthi,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01154,Aissa Bennacer,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01155,Dylan Hamdi,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01156,Montassar Sassi,Tunisia,Defender,1,Defender: Clearances + Aerial duels
+P01157,Wahbi Dragger,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01158,Youssef Dahmen,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01159,Ali Melki,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01160,Ellyes Msaad,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01161,Nader Chalali,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01162,Hannibal Krid,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01163,Aissa Dhaou,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01164,Dylan Msakni,Tunisia,Midfielder,2,Midfielder: Key passes + Passing
+P01165,Wahbi Chalali,Tunisia,Forward,0,Forward: Shots + Goals
+P01166,Youssef Krid,Tunisia,Forward,0,Forward: Shots + Goals
+P01167,Ali Dhaou,Tunisia,Forward,0,Forward: Shots + Goals
+P01168,Ellyes Msakni,Tunisia,Forward,0,Forward: Shots + Goals
+P01169,Nader Skhiri,Tunisia,Forward,0,Forward: Shots + Goals
+P01170,Hannibal Talbi,Tunisia,Forward,0,Forward: Shots + Goals
+P01171,Riyad Bennacer,Algeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01172,Ismael Brahimi,Algeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01173,Sofiane Mandrea,Algeria,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01174,Riyad Bensebaini,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01175,Ismael Benlamri,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01176,Sofiane Zerrouki,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01177,Yacine Aouar,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01178,Houssem Belkebla,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01179,Ramiz Slimani,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01180,Adam Toudic,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01181,Nabil Khezami,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01182,Islam Touzi,Algeria,Defender,1,Defender: Clearances + Aerial duels
+P01183,Riyad Benrahma,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01184,Ismael Brahim,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01185,Sofiane Bayo,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01186,Yacine Benkhemassa,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01187,Houssem Mokrani,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01188,Ramiz Boufantin,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01189,Adam Kara,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01190,Nabil Bennacer,Algeria,Midfielder,2,Midfielder: Key passes + Passing
+P01191,Riyad Mokrani,Algeria,Forward,0,Forward: Shots + Goals
+P01192,Ismael Boufantin,Algeria,Forward,0,Forward: Shots + Goals
+P01193,Sofiane Kara,Algeria,Forward,0,Forward: Shots + Goals
+P01194,Yacine Bennacer,Algeria,Forward,0,Forward: Shots + Goals
+P01195,Houssem Brahimi,Algeria,Forward,0,Forward: Shots + Goals
+P01196,Ramiz Mandrea,Algeria,Forward,0,Forward: Shots + Goals
+P01197,Mohamed Marmoush,Egypt,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01198,Omar Hegazi,Egypt,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01199,Trezeguet Trezeguet,Egypt,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01200,Mohamed Elneny,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01201,Omar Elsaid,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01202,Trezeguet Ashour,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01203,Ahmed Abdallah,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01204,Mostafa Attia,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01205,Mohamed Hassan,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01206,Mahmoud Soliman,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01207,Amr Afsha,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01208,Abdallah El-Shenawy,Egypt,Defender,1,Defender: Clearances + Aerial duels
+P01209,Mohamed Hamdi,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01210,Omar Koka,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01211,Trezeguet Said,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01212,Ahmed El-Sayed,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01213,Mostafa Gomaa,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01214,Mohamed Wahbi,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01215,Mahmoud Ibrahim,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01216,Amr Marmoush,Egypt,Midfielder,2,Midfielder: Key passes + Passing
+P01217,Mohamed Gomaa,Egypt,Forward,0,Forward: Shots + Goals
+P01218,Omar Wahbi,Egypt,Forward,0,Forward: Shots + Goals
+P01219,Trezeguet Ibrahim,Egypt,Forward,0,Forward: Shots + Goals
+P01220,Ahmed Marmoush,Egypt,Forward,0,Forward: Shots + Goals
+P01221,Mostafa Hegazi,Egypt,Forward,0,Forward: Shots + Goals
+P01222,Mohamed Trezeguet,Egypt,Forward,0,Forward: Shots + Goals
+P01223,Percy Zwane,South Africa,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01224,Themba Mokoena,South Africa,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01225,Lyle Mvala,South Africa,Goalkeeper,3,Goalkeeper: Saves + Physicality
+P01226,Percy Williams,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01227,Themba Sithole,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01228,Lyle Makgopa,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01229,Teboho Maela,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01230,Ronwen Dolly,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01231,Mothobi Mokoena,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01232,Sphephelo Moseamedi,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01233,Luther Maboe,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01234,Evidence Zungu,South Africa,Defender,1,Defender: Clearances + Aerial duels
+P01235,Percy Lorch,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01236,Themba Mdantsane,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01237,Lyle Mothiba,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01238,Teboho Billiat,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01239,Ronwen Mkhize,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01240,Mothobi Xoki,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01241,Sphephelo Mbatha,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01242,Luther Zwane,South Africa,Midfielder,2,Midfielder: Key passes + Passing
+P01243,Percy Mkhize,South Africa,Forward,0,Forward: Shots + Goals
+P01244,Themba Xoki,South Africa,Forward,0,Forward: Shots + Goals
+P01245,Lyle Mbatha,South Africa,Forward,0,Forward: Shots + Goals
+P01246,Teboho Zwane,South Africa,Forward,0,Forward: Shots + Goals
+P01247,Ronwen Mokoena,South Africa,Forward,0,Forward: Shots + Goals
+P01248,Mothobi Mvala,South Africa,Forward,0,Forward: Shots + Goals

@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars (gitignored) and fill in, OR export as TF_VAR_* env vars
+# (preferred for secrets so they never touch disk in plaintext).
+
+alert_email              = "you@example.com"
+monthly_budget_usd       = 10
+dev_ip_address           = "" # curl -s ifconfig.me
+# postgres_admin_password = "set via TF_VAR_postgres_admin_password instead"
+# groq_api_key            = "set via TF_VAR_groq_api_key instead"
