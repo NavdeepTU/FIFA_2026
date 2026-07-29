@@ -112,8 +112,9 @@ data/raw/*.csv
   a metric-parameterized leaderboard (goals/assists/rating/tackles/saves — allowlisted,
   not a raw column passthrough, to avoid SQL injection via the query param), player and
   team profile endpoints, and a matches list.
-- `routers/predict.py` / `routers/chat.py` are stubbed until Phases 2/3 land model
-  artifacts and the Groq client respectively.
+- `routers/predict.py` serves Phase 2 model artifacts. `routers/chat.py` serves
+  Phase 3 retrieval (`/chat/retrieve`, against `player_embeddings`); the Groq-backed
+  generation half is still unbuilt — see §4.5.
 - Config (`config.py`) is `pydantic-settings` reading from `.env` / real env vars:
   `DATABASE_URL`, `GROQ_API_KEY`, `CORS_ORIGINS`. No secrets are hardcoded anywhere.
 
@@ -147,15 +148,25 @@ RAG over `player_embeddings` (pgvector column added in `schema.sql`), Groq for
 generation, a constrained NL→query-spec translator (never raw LLM-generated SQL — see
 the plan file's Phase 3 notes for the injection/cost-blowup reasoning).
 
-**Embeddings step built**: `backend/genai/generate_embeddings.py` populates
+**Embeddings built**: `backend/genai/generate_embeddings.py` populates
 `player_embeddings` from `mv_player_tournament_stats` — one natural-language summary
 per player, embedded locally via `fastembed` (`BAAI/bge-small-en-v1.5`, ONNX, 384-dim).
 Local rather than a hosted API deliberately: Groq has no embeddings endpoint, and this
 avoids a second API key/cost just for retrieval — the interface (`embed_texts()`) is
 still small enough to swap later if needed. Idempotent, re-run via `make genai-embed`
-after every ETL load. **Not yet built**: the `/chat` endpoint that actually retrieves
-against these embeddings and calls Groq for generation, plus NL→chart and
-auto-generated reports.
+after every ETL load.
+
+**Retrieval built**: `POST /chat/retrieve` (`backend/app/routers/chat.py`) embeds an
+incoming query with the same `embed_texts()` used to build the embeddings, then does a
+pgvector `<->` distance search joined against `players` for the nearest summaries.
+Using the same embedding model for queries and documents isn't a style choice — vector
+similarity is only meaningful if both sides came from the same model. This makes
+`fastembed` a serving-time dependency of the API now, not just an offline-script one
+(`backend/requirements.txt`).
+
+**Not yet built**: the part that makes this RAG rather than just search — actually
+calling Groq with the retrieved summaries to generate a grounded natural-language
+answer — plus NL→chart and auto-generated reports.
 
 ## 5. Tech stack & why
 

@@ -19,11 +19,15 @@ it should always reflect what's actually working right now, not what's planned (
   allowlisted), player profile, team profile, matches list.
 - `/predict/*`: rating regressor, outcome classifier, archetype lookup + distribution,
   status check. All smoke-tested live against real trained artifacts.
-- `/chat/*`: stubbed (Phase 3, not built yet).
+- `/chat/status`, `/chat/retrieve`: retrieval-only RAG — embeds the query with the same
+  local model used to build `player_embeddings` and returns the nearest player
+  summaries by pgvector distance. No LLM call yet (see GenAI section below).
+  Smoke-tested live: a query like "a young forward who scores a lot of goals" returned
+  4/5 forwards as nearest neighbors.
 - Structured JSON logging with per-request correlation IDs (`X-Request-ID`), a global
   exception handler with a consistent, non-leaky error shape, `/health` (liveness) vs
   `/health/ready` (checks Postgres connectivity).
-- 13 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
+- 22 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
   integration tests against a real Postgres (that's a Phase 4/CI concern).
 - ruff-clean (`pyproject.toml` at repo root, `make lint`).
 
@@ -49,28 +53,34 @@ it should always reflect what's actually working right now, not what's planned (
   "API unreachable" fallback when the backend isn't running, and end-to-end against a
   live local backend with real trained models.
 
-### GenAI (Phase 3, first slice)
-- `backend/genai/generate_embeddings.py` populates `player_embeddings` (pgvector):
-  reads `mv_player_tournament_stats`, builds a natural-language summary per player
-  (`backend/genai/embeddings.py`), embeds it locally via `fastembed`
+### GenAI (Phase 3, in progress)
+- **Embeddings**: `backend/genai/generate_embeddings.py` populates `player_embeddings`
+  (pgvector): reads `mv_player_tournament_stats`, builds a natural-language summary per
+  player (`backend/genai/embeddings.py`), embeds it locally via `fastembed`
   (`BAAI/bge-small-en-v1.5`, ONNX, 384-dim — matches the column's declared dimension),
   and upserts. Local/offline rather than a hosted API: Groq (the project's LLM
   provider) has no embeddings endpoint, and this avoids a second API dependency just
   for retrieval. Idempotent — re-run via `make genai-embed` after every ETL load.
-- Verified against the real dataset: all 1248 players embedded; a pgvector similarity
+  Verified against the real dataset: all 1248 players embedded; a pgvector similarity
   query for "a goalkeeper who makes a lot of saves and keeps clean sheets" returned
   only goalkeepers as nearest neighbors, confirming the embeddings are semantically
   meaningful and not just populated.
-- Unit-tested (`backend/tests/test_genai_embeddings.py`) — the pure summary-text
-  builder, no model loading.
-- **While building this**, found and fixed a pre-existing bug in `etl/load.py`'s
-  `apply_schema()`: naive `;`-splitting treated the comment block immediately before
-  `create table player_embeddings` as making the whole statement comment-only, so the
-  table was silently never created on any fresh load despite `load.py` reporting
-  success. Fixed (`split_sql_statements`) and regression-tested
+- **Retrieval**: `POST /chat/retrieve` embeds an incoming natural-language query with
+  the same model and returns the nearest player summaries (`app/routers/chat.py`).
+  `fastembed` is now a serving-time dependency, not just an offline-script one — added
+  to `backend/requirements.txt` accordingly.
+- Unit-tested: `backend/tests/test_genai_embeddings.py` (pure summary-text builder),
+  `backend/tests/test_chat.py` (retrieval endpoint, embedding call mocked).
+- **While building the embeddings step**, found and fixed a pre-existing bug in
+  `etl/load.py`'s `apply_schema()`: naive `;`-splitting treated the comment block
+  immediately before `create table player_embeddings` as making the whole statement
+  comment-only, so the table was silently never created on any fresh load despite
+  `load.py` reporting success. Fixed (`split_sql_statements`) and regression-tested
   (`etl/tests/test_load.py`).
-- Not done yet: the `/chat` RAG endpoint itself (retrieval + Groq generation),
-  NL→chart, auto-generated reports — see "Not started yet" below.
+- Not done yet: actual answer *generation* (Groq call grounded in retrieved summaries),
+  NL→chart, auto-generated reports, rate limiting/token-usage logging (the last one
+  only matters once an LLM is actually being called — retrieval alone has no token
+  cost) — see "Not started yet" below.
 
 ### Infrastructure (Terraform, azurerm)
 - Full minimal-cost stack written: resource group, Postgres Flexible Server (B1MS),
@@ -89,9 +99,9 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: `player_embeddings` is now populated (see above) but nothing
-  queries it yet — the RAG `/chat` endpoint (retrieval + Groq generation),
-  natural-language → chart, and auto-generated reports are all still unbuilt.
+- **Phase 3 (GenAI)**: embeddings + retrieval are built (see above). Still unbuilt:
+  Groq-backed answer generation grounded in the retrieved summaries, natural-language →
+  chart, auto-generated reports, rate limiting/token-usage logging.
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App
   Insights wiring (env var is already passed to the container, just unused), Grafana
   dashboards, Sentry, load testing.

@@ -10,3 +10,8 @@ pandas==2.2.3
 joblib==1.4.2
 scikit-learn==1.5.2
 xgboost==2.1.2
+
+# serving /chat/retrieve -- embeds the query with the same model backend/genai/
+# generate_embeddings.py uses to build player_embeddings (must match for similarity
+# search to be meaningful)
+fastembed==0.8.0
