@@ -15,3 +15,6 @@ xgboost==2.1.2
 # generate_embeddings.py uses to build player_embeddings (must match for similarity
 # search to be meaningful)
 fastembed==0.8.0
+
+# serving /chat/ask -- Groq client for RAG answer generation
+groq==1.6.0

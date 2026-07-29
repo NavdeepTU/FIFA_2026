@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from genai.embeddings import embed_texts, to_pgvector_literal
+from genai.llm import generate_answer
 from pydantic import BaseModel, Field
 from sqlalchemy import Connection, text
 
+from app.config import settings
 from app.db import get_db
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -22,23 +24,23 @@ class RetrieveResult(BaseModel):
     distance: float
 
 
-@router.get("/status")
-def status():
-    return {
-        "retrieval_available": True,
-        "generation_available": False,
-        "message": "Retrieval over player_embeddings is live; Groq-backed answer generation isn't built yet.",
-    }
+class AskRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    top_k: int = Field(default=5, ge=1, le=20)
 
 
-@router.post("/retrieve", response_model=list[RetrieveResult])
-def retrieve(payload: RetrieveRequest, db: Connection = Depends(get_db)):
-    """Embeds the query with the same local model used to build `player_embeddings`
-    and returns the nearest player summaries by cosine/L2 distance -- the retrieval
-    half of RAG. No LLM call yet: see docs/project_status.md for what's still Phase 3.
+class AskResponse(BaseModel):
+    answer: str
+    sources: list[RetrieveResult]
+
+
+def _retrieve_similar_players(query: str, top_k: int, db: Connection) -> list[dict]:
+    """Embeds `query` with the same local model used to build `player_embeddings` and
+    returns the nearest player summaries by pgvector distance -- shared by /retrieve
+    (retrieval only) and /ask (retrieval + Groq generation).
     """
     try:
-        query_vector = embed_texts([payload.query])[0]
+        query_vector = embed_texts([query])[0]
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"embedding model unavailable: {e}") from e
 
@@ -49,6 +51,38 @@ def retrieve(payload: RetrieveRequest, db: Connection = Depends(get_db)):
             "from player_embeddings pe join players p on p.player_id = pe.player_id "
             "order by distance limit :top_k"
         ),
-        {"query_vector": to_pgvector_literal(query_vector), "top_k": payload.top_k},
+        {"query_vector": to_pgvector_literal(query_vector), "top_k": top_k},
     ).mappings().all()
     return list(rows)
+
+
+@router.get("/status")
+def status():
+    return {
+        "retrieval_available": True,
+        "generation_available": bool(settings.groq_api_key),
+        "message": (
+            "Retrieval over player_embeddings and Groq-backed generation are both live."
+            if settings.groq_api_key
+            else "Retrieval is live; generation needs GROQ_API_KEY set to work."
+        ),
+    }
+
+
+@router.post("/retrieve", response_model=list[RetrieveResult])
+def retrieve(payload: RetrieveRequest, db: Connection = Depends(get_db)):
+    return _retrieve_similar_players(payload.query, payload.top_k, db)
+
+
+@router.post("/ask", response_model=AskResponse)
+def ask(payload: AskRequest, db: Connection = Depends(get_db)):
+    """Retrieval-augmented generation: retrieves the nearest player summaries, then
+    asks Groq to answer the question grounded in only that context -- not free-form
+    LLM guessing (see docs/project_scope.md §5).
+    """
+    sources = _retrieve_similar_players(payload.query, payload.top_k, db)
+    try:
+        answer = generate_answer(payload.query, [s["summary_text"] for s in sources])
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"generation unavailable: {e}") from e
+    return AskResponse(answer=answer, sources=sources)

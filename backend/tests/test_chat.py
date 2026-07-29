@@ -52,3 +52,55 @@ def test_retrieve_returns_503_when_embedding_fails(make_client, monkeypatch):
     client = make_client([])
     resp = client.post("/chat/retrieve", json={"query": "best goalkeeper"})
     assert resp.status_code == 503
+
+
+def test_ask_retrieves_then_generates_grounded_answer(make_client, monkeypatch):
+    monkeypatch.setattr(chat_router, "embed_texts", lambda texts: [[0.1] * 384])
+    captured = {}
+
+    def fake_generate_answer(question, context):
+        captured["question"] = question
+        captured["context"] = context
+        return "Test Keeper made the most saves."
+
+    monkeypatch.setattr(chat_router, "generate_answer", fake_generate_answer)
+    rows = [
+        {
+            "player_id": "P00001",
+            "player_name": "Test Keeper",
+            "team": "France",
+            "position": "Goalkeeper",
+            "summary_text": "Test Keeper is a Goalkeeper for France.",
+            "distance": 0.42,
+        }
+    ]
+    client = make_client([rows])
+    resp = client.post("/chat/ask", json={"query": "who made the most saves?", "top_k": 5})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["answer"] == "Test Keeper made the most saves."
+    assert body["sources"] == rows
+    assert captured["question"] == "who made the most saves?"
+    assert captured["context"] == ["Test Keeper is a Goalkeeper for France."]
+
+
+def test_ask_returns_503_when_generation_fails(make_client, monkeypatch):
+    monkeypatch.setattr(chat_router, "embed_texts", lambda texts: [[0.1] * 384])
+
+    def _raise(_question, _context):
+        raise RuntimeError("GROQ_API_KEY is not set")
+
+    monkeypatch.setattr(chat_router, "generate_answer", _raise)
+    rows = [
+        {
+            "player_id": "P00001",
+            "player_name": "Test Keeper",
+            "team": "France",
+            "position": "Goalkeeper",
+            "summary_text": "Test Keeper is a Goalkeeper for France.",
+            "distance": 0.42,
+        }
+    ]
+    client = make_client([rows])
+    resp = client.post("/chat/ask", json={"query": "who made the most saves?"})
+    assert resp.status_code == 503

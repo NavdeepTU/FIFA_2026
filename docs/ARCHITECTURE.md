@@ -71,7 +71,7 @@ data/raw/*.csv
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
 | `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
-| `backend/genai/` | Offline embedding generation for the RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`). |
+| `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
 | `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`. |
@@ -142,7 +142,7 @@ leakage consideration (composite score columns like `performance_score` are excl
 inputs when predicting `player_rating`, since they're plausibly derived from it in the
 synthetic data generation — using them as features would be leaking the target).
 
-### 4.5 GenAI (Phase 3, in progress)
+### 4.5 GenAI (Phase 3, RAG loop complete)
 
 RAG over `player_embeddings` (pgvector column added in `schema.sql`), Groq for
 generation, a constrained NL→query-spec translator (never raw LLM-generated SQL — see
@@ -164,9 +164,23 @@ similarity is only meaningful if both sides came from the same model. This makes
 `fastembed` a serving-time dependency of the API now, not just an offline-script one
 (`backend/requirements.txt`).
 
-**Not yet built**: the part that makes this RAG rather than just search — actually
-calling Groq with the retrieved summaries to generate a grounded natural-language
-answer — plus NL→chart and auto-generated reports.
+**Generation built**: `POST /chat/ask` runs the same retrieval, then calls
+`generate_answer()` (`backend/genai/llm.py`), which is the entire provider-agnostic
+surface the router depends on — a Groq implementation today (`llama-3.3-70b-versatile`,
+via the official `groq` Python SDK), swappable later by writing one new function with
+the same signature rather than touching `chat.py`. The system prompt constrains the
+model to answer only from the summaries it was given, rather than free-form guessing;
+verified live that cited numbers (save counts, clean sheets) matched the retrieved
+sources exactly. Each call logs model name, prompt/completion/total token counts, and
+latency (`app.genai` logger) — the raw material for the FinOps token-usage dashboard in
+§8, not that dashboard itself. `/chat/status` reports whether `GROQ_API_KEY` is
+configured; `/chat/ask` returns 503 (not a bare 500) if generation fails, matching how
+`/predict` handles missing model artifacts.
+
+**Not yet built**: NL→chart, auto-generated/cached reports, rate limiting on the GenAI
+endpoints, and team-level embeddings (`player_embeddings` is player-only per
+`schema.sql` — there's no `team_embeddings` table, so team-level questions have nothing
+to retrieve against yet).
 
 ## 5. Tech stack & why
 

@@ -1,6 +1,9 @@
 import os
 
 os.environ.setdefault("DATABASE_URL", "postgresql://user:pass@localhost:5432/test")
+# pydantic-settings reads backend/.env by default (cwd when tests run) -- pin this
+# explicitly so tests don't silently pick up a real key from a developer's local .env.
+os.environ.setdefault("GROQ_API_KEY", "")
 
 import pytest
 from app.db import get_db

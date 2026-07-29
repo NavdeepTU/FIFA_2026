@@ -19,15 +19,19 @@ it should always reflect what's actually working right now, not what's planned (
   allowlisted), player profile, team profile, matches list.
 - `/predict/*`: rating regressor, outcome classifier, archetype lookup + distribution,
   status check. All smoke-tested live against real trained artifacts.
-- `/chat/status`, `/chat/retrieve`: retrieval-only RAG — embeds the query with the same
-  local model used to build `player_embeddings` and returns the nearest player
-  summaries by pgvector distance. No LLM call yet (see GenAI section below).
-  Smoke-tested live: a query like "a young forward who scores a lot of goals" returned
-  4/5 forwards as nearest neighbors.
+- `/chat/status`, `/chat/retrieve`, `/chat/ask`: full RAG loop. `/retrieve` embeds the
+  query with the same local model used to build `player_embeddings` and returns the
+  nearest player summaries by pgvector distance; `/ask` does that same retrieval and
+  then asks Groq to answer grounded only in the retrieved summaries. Smoke-tested live:
+  asking "Who are the best goalkeepers based on saves and clean sheets?" returned an
+  answer citing the exact save/clean-sheet counts from the retrieved players, correctly
+  ranked, with no invented numbers.
 - Structured JSON logging with per-request correlation IDs (`X-Request-ID`), a global
   exception handler with a consistent, non-leaky error shape, `/health` (liveness) vs
-  `/health/ready` (checks Postgres connectivity).
-- 22 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
+  `/health/ready` (checks Postgres connectivity). Groq calls additionally log
+  model/prompt/completion/total token counts and latency per request (`app.genai`
+  logger) — the raw material for a future token-usage dashboard.
+- 24 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
   integration tests against a real Postgres (that's a Phase 4/CI concern).
 - ruff-clean (`pyproject.toml` at repo root, `make lint`).
 
@@ -69,18 +73,26 @@ it should always reflect what's actually working right now, not what's planned (
   the same model and returns the nearest player summaries (`app/routers/chat.py`).
   `fastembed` is now a serving-time dependency, not just an offline-script one — added
   to `backend/requirements.txt` accordingly.
+- **Generation**: `POST /chat/ask` retrieves via the same path, then calls Groq
+  (`llama-3.3-70b-versatile`) with a system prompt constraining it to answer only from
+  the retrieved player summaries (`backend/genai/llm.py`, `generate_answer()`) — not
+  free-form guessing. Built behind a provider-agnostic function signature so swapping
+  providers later means writing one new function, not touching the router. Token usage
+  and latency logged per call. Requires `GROQ_API_KEY` in `backend/.env`
+  (`/chat/status` reports whether it's set); without it, `/ask` returns 503 rather than
+  failing opaquely.
 - Unit-tested: `backend/tests/test_genai_embeddings.py` (pure summary-text builder),
-  `backend/tests/test_chat.py` (retrieval endpoint, embedding call mocked).
-- **While building the embeddings step**, found and fixed a pre-existing bug in
+  `backend/tests/test_chat.py` (retrieval and generation, both with the Groq/embedding
+  calls mocked).
+- **While building the embeddings step earlier**, found and fixed a pre-existing bug in
   `etl/load.py`'s `apply_schema()`: naive `;`-splitting treated the comment block
   immediately before `create table player_embeddings` as making the whole statement
   comment-only, so the table was silently never created on any fresh load despite
   `load.py` reporting success. Fixed (`split_sql_statements`) and regression-tested
   (`etl/tests/test_load.py`).
-- Not done yet: actual answer *generation* (Groq call grounded in retrieved summaries),
-  NL→chart, auto-generated reports, rate limiting/token-usage logging (the last one
-  only matters once an LLM is actually being called — retrieval alone has no token
-  cost) — see "Not started yet" below.
+- Not done yet: NL→chart, auto-generated/cached reports, and **rate limiting** on the
+  GenAI endpoints (token-usage *logging* is done; actual request throttling isn't) —
+  see "Not started yet" below.
 
 ### Infrastructure (Terraform, azurerm)
 - Full minimal-cost stack written: resource group, Postgres Flexible Server (B1MS),
@@ -99,9 +111,12 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: embeddings + retrieval are built (see above). Still unbuilt:
-  Groq-backed answer generation grounded in the retrieved summaries, natural-language →
-  chart, auto-generated reports, rate limiting/token-usage logging.
+- **Phase 3 (GenAI)**: embeddings, retrieval, and grounded generation are all built
+  (see above) — the core RAG loop works end-to-end. Still unbuilt: natural-language →
+  chart, auto-generated/cached reports, rate limiting on the GenAI endpoints, and
+  team-level summaries (`player_embeddings` is player-only; a question like "which team
+  had the best defense?" has no team embeddings to retrieve against yet). No frontend
+  chat UI yet either — `/chat/*` has only been exercised via curl/tests so far.
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App
   Insights wiring (env var is already passed to the container, just unused), Grafana
   dashboards, Sentry, load testing.
