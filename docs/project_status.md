@@ -86,18 +86,28 @@ it should always reflect what's actually working right now, not what's planned (
   and latency logged per call. Requires `GROQ_API_KEY` in `backend/.env`
   (`/chat/status` reports whether it's set); without it, `/ask` returns 503 rather than
   failing opaquely.
+- **Rate limiting**: `backend/app/rate_limit.py` — a small hand-rolled, in-memory,
+  per-client-IP limiter (20 requests / 60 seconds, shared across `/chat/retrieve` and
+  `/chat/ask`), applied as a FastAPI dependency. No new package — same "the payoff for
+  one more dependency isn't there yet" call already made for structured logging.
+  In-memory only, so it resets on restart and doesn't coordinate across multiple API
+  processes — fine for the single-instance Container Apps deployment this project
+  targets; a real multi-instance deployment would need a shared store (Redis) instead.
+  Returns `429` with a `Retry-After` header once the limit is hit. `/chat/status` now
+  reports the configured limit. Verified live: the 21st request within a minute got
+  `429` with `retry-after: 50`, requests 1-20 all succeeded.
 - Unit-tested: `backend/tests/test_genai_embeddings.py` (pure summary-text builder),
-  `backend/tests/test_chat.py` (retrieval and generation, both with the Groq/embedding
-  calls mocked).
+  `backend/tests/test_chat.py` (retrieval, generation, and rate limiting — all with the
+  Groq/embedding calls mocked; the rate limiter's state is reset between tests via an
+  autouse fixture in `conftest.py` so tests don't trip each other's limits).
 - **While building the embeddings step earlier**, found and fixed a pre-existing bug in
   `etl/load.py`'s `apply_schema()`: naive `;`-splitting treated the comment block
   immediately before `create table player_embeddings` as making the whole statement
   comment-only, so the table was silently never created on any fresh load despite
   `load.py` reporting success. Fixed (`split_sql_statements`) and regression-tested
   (`etl/tests/test_load.py`).
-- Not done yet: NL→chart, auto-generated/cached reports, and **rate limiting** on the
-  GenAI endpoints (token-usage *logging* is done; actual request throttling isn't) —
-  see "Not started yet" below.
+- Not done yet: NL→chart and auto-generated/cached reports — see "Not started yet"
+  below.
 
 ### Infrastructure (Terraform, azurerm)
 - Full minimal-cost stack written: resource group, Postgres Flexible Server (B1MS),
@@ -116,10 +126,10 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: embeddings, retrieval, grounded generation, and a frontend chat
-  UI are all built (see above) — the core RAG feature works end-to-end, backend and
-  frontend. Still unbuilt: natural-language → chart, auto-generated/cached reports,
-  rate limiting on the GenAI endpoints, and team-level summaries (`player_embeddings`
+- **Phase 3 (GenAI)**: embeddings, retrieval, grounded generation, rate limiting, and a
+  frontend chat UI are all built (see above) — the core RAG feature works end-to-end,
+  backend and frontend, with a real usage safety net. Still unbuilt: natural-language →
+  chart, auto-generated/cached reports, and team-level summaries (`player_embeddings`
   is player-only; a question like "which team had the best defense?" has no team
   embeddings to retrieve against yet).
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App

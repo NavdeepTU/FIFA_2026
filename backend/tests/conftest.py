@@ -8,7 +8,17 @@ os.environ.setdefault("GROQ_API_KEY", "")
 import pytest
 from app.db import get_db
 from app.main import app
+from app.rate_limit import reset as reset_rate_limiter
 from fastapi.testclient import TestClient
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """The rate limiter's hit-tracking is module-level state -- without this, tests
+    that hit /chat/* repeatedly would trip each other's limits depending on run order.
+    """
+    reset_rate_limiter()
+    yield
 
 
 class FakeResult:

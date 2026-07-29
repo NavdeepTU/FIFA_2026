@@ -6,6 +6,7 @@ from sqlalchemy import Connection, text
 
 from app.config import settings
 from app.db import get_db
+from app.rate_limit import MAX_REQUESTS_PER_WINDOW, WINDOW_SECONDS, rate_limit
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -66,16 +67,19 @@ def status():
             if settings.groq_api_key
             else "Retrieval is live; generation needs GROQ_API_KEY set to work."
         ),
+        "rate_limit": {"requests_per_window": MAX_REQUESTS_PER_WINDOW, "window_seconds": WINDOW_SECONDS},
     }
 
 
 @router.post("/retrieve", response_model=list[RetrieveResult])
-def retrieve(payload: RetrieveRequest, db: Connection = Depends(get_db)):
+def retrieve(
+    payload: RetrieveRequest, db: Connection = Depends(get_db), _rate_limit: None = Depends(rate_limit)
+):
     return _retrieve_similar_players(payload.query, payload.top_k, db)
 
 
 @router.post("/ask", response_model=AskResponse)
-def ask(payload: AskRequest, db: Connection = Depends(get_db)):
+def ask(payload: AskRequest, db: Connection = Depends(get_db), _rate_limit: None = Depends(rate_limit)):
     """Retrieval-augmented generation: retrieves the nearest player summaries, then
     asks Groq to answer the question grounded in only that context -- not free-form
     LLM guessing (see docs/project_scope.md §5).

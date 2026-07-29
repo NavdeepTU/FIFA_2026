@@ -69,7 +69,7 @@ data/raw/*.csv
 |---|---|
 | `data/raw/` | Source CSV + dataset info. Gitignored (large, not committed) — see §4 for why. |
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
-| `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
+| `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `rate_limit.py` (in-memory limiter for `/chat/*`), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
 | `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
@@ -177,10 +177,20 @@ latency (`app.genai` logger) — the raw material for the FinOps token-usage das
 configured; `/chat/ask` returns 503 (not a bare 500) if generation fails, matching how
 `/predict` handles missing model artifacts.
 
-**Not yet built**: NL→chart, auto-generated/cached reports, rate limiting on the GenAI
-endpoints, and team-level embeddings (`player_embeddings` is player-only per
-`schema.sql` — there's no `team_embeddings` table, so team-level questions have nothing
-to retrieve against yet).
+**Rate limiting built**: `backend/app/rate_limit.py` is a small in-memory, per-client-IP
+fixed-window limiter (20 requests / 60s, shared across `/chat/retrieve` and
+`/chat/ask`), wired in as a FastAPI dependency. Hand-rolled rather than a dependency
+like `slowapi` — same call already made for structured logging (`logging_config.py`):
+the payoff for one more package isn't there yet at this project's size. In-memory means
+it only tracks hits within a single process; fine for the single Container Apps
+instance this project targets, but a multi-instance deployment would need a shared
+store (Redis) instead. Returns `429` with a `Retry-After` header once tripped; verified
+live. Tests reset the limiter's state between runs via an autouse fixture
+(`conftest.py`) so they don't trip each other's limits.
+
+**Not yet built**: NL→chart, auto-generated/cached reports, and team-level embeddings
+(`player_embeddings` is player-only per `schema.sql` — there's no `team_embeddings`
+table, so team-level questions have nothing to retrieve against yet).
 
 ## 5. Tech stack & why
 

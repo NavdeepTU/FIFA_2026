@@ -2,6 +2,7 @@
 load the real fastembed model, matching how /predict tests mock model artifacts
 (see test_predict.py). DB layer is the existing FakeConnection from conftest.
 """
+from app.rate_limit import MAX_REQUESTS_PER_WINDOW
 from app.routers import chat as chat_router
 
 
@@ -14,6 +15,7 @@ def test_status():
     body = resp.json()
     assert body["retrieval_available"] is True
     assert body["generation_available"] is False
+    assert body["rate_limit"]["requests_per_window"] == MAX_REQUESTS_PER_WINDOW
 
 
 def test_retrieve_embeds_query_and_returns_nearest_players(make_client, monkeypatch):
@@ -104,3 +106,16 @@ def test_ask_returns_503_when_generation_fails(make_client, monkeypatch):
     client = make_client([rows])
     resp = client.post("/chat/ask", json={"query": "who made the most saves?"})
     assert resp.status_code == 503
+
+
+def test_retrieve_rate_limits_after_max_requests(make_client, monkeypatch):
+    monkeypatch.setattr(chat_router, "embed_texts", lambda texts: [[0.1] * 384])
+    client = make_client([[] for _ in range(MAX_REQUESTS_PER_WINDOW)])
+
+    for _ in range(MAX_REQUESTS_PER_WINDOW):
+        resp = client.post("/chat/retrieve", json={"query": "goalkeepers"})
+        assert resp.status_code == 200
+
+    resp = client.post("/chat/retrieve", json={"query": "goalkeepers"})
+    assert resp.status_code == 429
+    assert "Retry-After" in resp.headers
