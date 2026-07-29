@@ -35,13 +35,27 @@ def get_engine():
     return create_engine(db_url)
 
 
+def split_sql_statements(ddl: str) -> list[str]:
+    """Splits a `;`-delimited DDL script into individual statements, stripping
+    full-line `--` comments per line rather than only checking each chunk's first
+    line -- a comment block immediately preceding a statement (no blank statement
+    between them) would otherwise make the whole chunk look comment-only and get
+    dropped, SQL included.
+    """
+    statements = []
+    for chunk in ddl.split(";"):
+        lines = [line for line in chunk.splitlines() if not line.strip().startswith("--")]
+        statement = "\n".join(lines).strip()
+        if statement:
+            statements.append(statement)
+    return statements
+
+
 def apply_schema(engine) -> None:
     ddl = SCHEMA_SQL.read_text()
     with engine.begin() as conn:
-        for statement in ddl.split(";"):
-            statement = statement.strip()
-            if statement and not statement.startswith("--"):
-                conn.execute(text(statement))
+        for statement in split_sql_statements(ddl):
+            conn.execute(text(statement))
 
 
 def load_tables(engine, tables: dict[str, pd.DataFrame]) -> None:

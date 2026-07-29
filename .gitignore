@@ -27,4 +27,4 @@ infra/*.tfvars
 # os / editor
 .DS_Store
 .vscode/
-.claude/
+.claude/settings.local.json

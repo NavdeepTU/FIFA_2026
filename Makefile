@@ -1,13 +1,16 @@
-.PHONY: install test lint api etl-run ml-train frontend-dev
+.PHONY: install test lint api etl-run ml-train genai-embed frontend-dev
 
 install:
 	python3 -m venv backend/.venv
-	backend/.venv/bin/pip install --no-cache-dir -r etl/requirements.txt -r backend/requirements-dev.txt -r backend/ml/requirements.txt
+	backend/.venv/bin/pip install --no-cache-dir -r etl/requirements.txt -r backend/requirements-dev.txt -r backend/ml/requirements.txt -r backend/genai/requirements.txt
 
 ml-train:
 	cd backend/ml && ../.venv/bin/python train_rating_model.py
 	cd backend/ml && ../.venv/bin/python train_outcome_model.py
 	cd backend/ml && ../.venv/bin/python train_clustering.py
+
+genai-embed:
+	backend/.venv/bin/python backend/genai/generate_embeddings.py
 
 test:
 	cd backend && .venv/bin/python -m pytest tests/ -q

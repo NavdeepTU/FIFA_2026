@@ -49,6 +49,29 @@ it should always reflect what's actually working right now, not what's planned (
   "API unreachable" fallback when the backend isn't running, and end-to-end against a
   live local backend with real trained models.
 
+### GenAI (Phase 3, first slice)
+- `backend/genai/generate_embeddings.py` populates `player_embeddings` (pgvector):
+  reads `mv_player_tournament_stats`, builds a natural-language summary per player
+  (`backend/genai/embeddings.py`), embeds it locally via `fastembed`
+  (`BAAI/bge-small-en-v1.5`, ONNX, 384-dim — matches the column's declared dimension),
+  and upserts. Local/offline rather than a hosted API: Groq (the project's LLM
+  provider) has no embeddings endpoint, and this avoids a second API dependency just
+  for retrieval. Idempotent — re-run via `make genai-embed` after every ETL load.
+- Verified against the real dataset: all 1248 players embedded; a pgvector similarity
+  query for "a goalkeeper who makes a lot of saves and keeps clean sheets" returned
+  only goalkeepers as nearest neighbors, confirming the embeddings are semantically
+  meaningful and not just populated.
+- Unit-tested (`backend/tests/test_genai_embeddings.py`) — the pure summary-text
+  builder, no model loading.
+- **While building this**, found and fixed a pre-existing bug in `etl/load.py`'s
+  `apply_schema()`: naive `;`-splitting treated the comment block immediately before
+  `create table player_embeddings` as making the whole statement comment-only, so the
+  table was silently never created on any fresh load despite `load.py` reporting
+  success. Fixed (`split_sql_statements`) and regression-tested
+  (`etl/tests/test_load.py`).
+- Not done yet: the `/chat` RAG endpoint itself (retrieval + Groq generation),
+  NL→chart, auto-generated reports — see "Not started yet" below.
+
 ### Infrastructure (Terraform, azurerm)
 - Full minimal-cost stack written: resource group, Postgres Flexible Server (B1MS),
   Blob Storage (data lake + static site, no CDN), Key Vault, Container Apps
@@ -66,9 +89,9 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: RAG chat endpoint, pgvector embeddings, natural-language → chart,
-  auto-generated reports. Schema already has a `player_embeddings` table ready
-  (`etl/schema.sql`) but nothing populates or queries it yet.
+- **Phase 3 (GenAI)**: `player_embeddings` is now populated (see above) but nothing
+  queries it yet — the RAG `/chat` endpoint (retrieval + Groq generation),
+  natural-language → chart, and auto-generated reports are all still unbuilt.
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App
   Insights wiring (env var is already passed to the container, just unused), Grafana
   dashboards, Sentry, load testing.

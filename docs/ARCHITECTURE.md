@@ -71,6 +71,7 @@ data/raw/*.csv
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
 | `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
+| `backend/genai/` | Offline embedding generation for the RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
 | `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`. |
@@ -140,11 +141,21 @@ leakage consideration (composite score columns like `performance_score` are excl
 inputs when predicting `player_rating`, since they're plausibly derived from it in the
 synthetic data generation — using them as features would be leaking the target).
 
-### 4.5 GenAI (Phase 3, not yet built)
+### 4.5 GenAI (Phase 3, in progress)
 
 RAG over `player_embeddings` (pgvector column added in `schema.sql`), Groq for
 generation, a constrained NL→query-spec translator (never raw LLM-generated SQL — see
 the plan file's Phase 3 notes for the injection/cost-blowup reasoning).
+
+**Embeddings step built**: `backend/genai/generate_embeddings.py` populates
+`player_embeddings` from `mv_player_tournament_stats` — one natural-language summary
+per player, embedded locally via `fastembed` (`BAAI/bge-small-en-v1.5`, ONNX, 384-dim).
+Local rather than a hosted API deliberately: Groq has no embeddings endpoint, and this
+avoids a second API key/cost just for retrieval — the interface (`embed_texts()`) is
+still small enough to swap later if needed. Idempotent, re-run via `make genai-embed`
+after every ETL load. **Not yet built**: the `/chat` endpoint that actually retrieves
+against these embeddings and calls Groq for generation, plus NL→chart and
+auto-generated reports.
 
 ## 5. Tech stack & why
 
