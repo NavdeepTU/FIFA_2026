@@ -172,6 +172,33 @@ it should always reflect what's actually working right now, not what's planned (
   player/team-level, would need a per-match cache key and likely a frontend matches
   page, which doesn't exist yet) — see "Not started yet" below.
 
+### CI/CD (Phase 4, first slice)
+- `.github/workflows/ci.yml`: lint + test on every push to `main`/`master` and every
+  PR, in two parallel jobs. **Backend**: `make install && make lint && make test` —
+  literally the same targets used locally, not a separately-maintained CI-only
+  command list, so CI can't quietly drift from what a developer runs on their own
+  machine. **Frontend**: `npm ci && npm run lint && npm run build` (`next build`
+  type-checks as part of building, so a separate `tsc` step isn't needed).
+- **Caught a real, pre-existing bug while setting this up**: `npm run lint` had never
+  actually been run on this project before (only `tsc --noEmit` and `npm run build`,
+  neither of which run ESLint) — it failed immediately on `ScoutingReport.tsx` with
+  `react-hooks/set-state-in-effect` (calling `setLoading(true)` synchronously at the
+  top of a `useEffect`). Root cause: `loading` already defaults to `true` in
+  `useState`, so the call was only ever needed to reset state when the component's
+  `id`/`kind` changes without remounting (e.g. navigating from one player's profile
+  to another). Fixed properly rather than just silencing the rule: both call sites
+  (`players/[id]/page.tsx`, `teams/[team]/page.tsx`) now pass `key={id}` to
+  `ScoutingReport`, so a change in entity forces a real remount — React's own
+  documented pattern for "reset state when a prop changes" — making the redundant
+  `setLoading(true)` removable entirely.
+- Deliberately scoped to lint + test only, matching `project_scope.md` §7's split —
+  building/pushing Docker images and `terraform apply` on merge need a container
+  registry and OIDC federated credentials, neither of which exist yet; that's a
+  separate, larger piece of Phase 4, not done here.
+- Not yet verified with a real run on GitHub (only local `make lint`/`make test` and
+  `npm run lint`/`npm run build`, which the workflow's steps are copied from) — that
+  needs an actual push, which happens through the normal end-of-session commit flow.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -255,11 +282,13 @@ it should always reflect what's actually working right now, not what's planned (
   backend and frontend, answers both player- and team-level questions, with a real
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
-- **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
-  Docker image for the API (Container App currently runs a placeholder hello-world
-  image — the database behind it is populated and ready, but nothing is actually
-  serving it yet), Azure Monitor/App Insights wiring (env var is already passed to the
-  container, just unused), Grafana dashboards, Sentry, load testing.
+- **Phase 4 (observability/CI/CD)**: lint + test CI is built (see above). Still
+  unbuilt: building/pushing a real Docker image for the API on merge (needs a
+  container registry + OIDC federated credentials first — Container App currently
+  runs a placeholder hello-world image; the database behind it is populated and
+  ready, but nothing is actually serving it yet), `terraform apply` on merge, Azure
+  Monitor/App Insights wiring (env var is already passed to the container, just
+  unused), Grafana dashboards, Sentry, load testing.
 
 ## Known limitations / honest caveats
 

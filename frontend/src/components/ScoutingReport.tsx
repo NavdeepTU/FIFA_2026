@@ -23,7 +23,10 @@ export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: stri
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    // No setLoading(true) here -- `loading` already starts true, and the parent
+    // passes key={id} so a change in id/kind remounts this component fresh rather
+    // than reusing state across entities (React's recommended pattern for "reset
+    // state when a prop changes" -- see https://react.dev/learn/you-might-not-need-an-effect).
     FETCHERS[kind](id)
       .then((r) => {
         if (!cancelled) setReport(r);

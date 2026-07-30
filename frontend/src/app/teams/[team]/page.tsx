@@ -34,7 +34,7 @@ export default async function TeamProfilePage({
         <StatTile label="Goal difference" value={standing.goal_difference} />
       </section>
 
-      <ScoutingReport kind="team" id={standing.team} />
+      <ScoutingReport key={standing.team} kind="team" id={standing.team} />
 
       <section className="flex flex-col gap-3">
         <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>

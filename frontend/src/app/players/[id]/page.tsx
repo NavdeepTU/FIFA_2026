@@ -38,7 +38,7 @@ export default async function PlayerProfilePage({
         <StatTile label="Avg rating" value={profile.avg_player_rating?.toFixed(1)} />
       </section>
 
-      <ScoutingReport kind="player" id={profile.player_id} />
+      <ScoutingReport key={profile.player_id} kind="player" id={profile.player_id} />
 
       <section className="flex flex-col gap-3">
         <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>

@@ -78,7 +78,7 @@ data/raw/*.csv
 | `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`, `ScoutingReport` (`kind: "player" \| "team"`, used on both profile pages). |
 | `frontend/src/lib/api.ts` | Typed fetch client for the backend API. |
 | `infra/` | Terraform: `main.tf` (resource group), `postgres.tf`, `storage.tf`, `keyvault.tf`, `container_apps.tf`, `budget.tf`. |
-| `.github/workflows/` | CI/CD (Phase 4). |
+| `.github/workflows/` | `ci.yml` — lint + test on push/PR (Phase 4, first slice; see §9). Docker build/push + `terraform apply` on merge not yet built. |
 | `docs/` | This file, plus anything else worth keeping close to the code. |
 
 ## 4. Data flow, in detail
@@ -362,10 +362,23 @@ you edit a stat line, verified end-to-end against the real trained model.
 - `ruff` configured at the repo root (`pyproject.toml`) — `make lint` runs it.
 - `Makefile` with `install`/`test`/`lint`/`etl-run`/`api`/`frontend-dev` targets so
   the exact commands don't need to be re-derived each session.
+- **CI** (`.github/workflows/ci.yml`): lint + test on every push/PR, two parallel
+  jobs (backend: `make install && make lint && make test`; frontend: `npm ci && npm
+  run lint && npm run build`) that call the exact same commands used locally rather
+  than a parallel CI-only script, so the two can't drift apart. Setting this up
+  caught a real bug: `npm run lint` (ESLint) had never actually been run on this
+  project before — `tsc --noEmit` and `npm run build` don't run it — and it failed
+  immediately on a `react-hooks/set-state-in-effect` violation in `ScoutingReport.tsx`
+  (a redundant `setLoading(true)` inside a `useEffect`, when `loading` already
+  defaults to `true`). Fixed by adding `key={id}` where the component is used, so a
+  changed entity remounts it fresh (React's documented pattern for this) instead of
+  needing the effect to manually reset state.
 
-**Still Phase 4**: Azure Monitor + Application Insights wired to the deployed
-Container App (the `APPLICATIONINSIGHTS_CONNECTION_STRING` env var is already passed
-in `infra/container_apps.tf`, just not consumed by the app yet), self-hosted Grafana
+**Still Phase 4**: building/pushing a real Docker image for the API on merge (needs a
+container registry + OIDC federated credentials, neither set up yet) and `terraform
+apply` on merge; Azure Monitor + Application Insights wired to the deployed Container
+App (the `APPLICATIONINSIGHTS_CONNECTION_STRING` env var is already passed in
+`infra/container_apps.tf`, just not consumed by the app yet), self-hosted Grafana
 dashboards on top, Sentry for frontend/backend error tracking, and a Groq token-usage
 dashboard (cost/FinOps angle even though the API itself is free).
 
@@ -381,5 +394,8 @@ dashboard (cost/FinOps angle even though the API itself is free).
 - [x] Azure resources actually provisioned (23 resources, `rg-fifa26-dev` — see §7)
 - [x] Phase 2: ML models trained + served (rating regressor, outcome classifier,
       archetype clustering) + frontend what-if predictor, verified end-to-end
-- [ ] Phase 3: GenAI RAG layer (Groq)
-- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry
+- [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
+      limiting, player + team scouting reports, all live on Azure. Remaining:
+      NL→chart, match recaps (see §4.5)
+- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI built
+      (see §9); Docker/registry, `terraform apply` on merge, and monitoring not yet
