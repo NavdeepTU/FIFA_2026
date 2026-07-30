@@ -117,6 +117,15 @@ create table if not exists team_embeddings (
     updated_at timestamptz default now()
 );
 
+-- Cached, Groq-generated scouting reports (Phase 3): one per player, regenerated
+-- on demand via POST /reports/players/{id} rather than every request -- keeps repeat
+-- views free and avoids re-spending Groq tokens on unchanged data.
+create table if not exists player_reports (
+    player_id text primary key references players(player_id),
+    report_text text not null,
+    generated_at timestamptz default now()
+);
+
 -- ==== Materialized aggregate views (Phase 1 analytics) ====
 
 drop materialized view if exists mv_player_tournament_stats;

@@ -62,9 +62,9 @@ def apply_schema(engine) -> None:
 def load_tables(engine, tables: dict[str, pd.DataFrame]) -> None:
     with engine.begin() as conn:
         # truncate in reverse FK order, then insert in forward order, so re-running is idempotent.
-        # CASCADE also empties player_embeddings / team_embeddings (they have FKs into players /
-        # teams) -- unavoidable with plain truncate+reload, so every ETL run wipes them, not just
-        # a first run. That's why main() prints a reminder to regenerate them below.
+        # CASCADE also empties player_embeddings / team_embeddings / player_reports (they all have
+        # FKs into players / teams) -- unavoidable with plain truncate+reload, so every ETL run
+        # wipes them, not just a first run. That's why main() prints a reminder below.
         for name in reversed(TABLE_ORDER):
             conn.execute(text(f"truncate table {name} cascade"))
         for name in TABLE_ORDER:
@@ -97,8 +97,9 @@ def main() -> None:
 
     print("Done.")
     print(
-        "Note: this truncated (via CASCADE) any existing player_embeddings / team_embeddings "
-        "rows. Run `make genai-embed` and `make genai-embed-teams` to regenerate them."
+        "Note: this truncated (via CASCADE) any existing player_embeddings / team_embeddings / "
+        "player_reports rows. Run `make genai-embed` and `make genai-embed-teams` to regenerate "
+        "embeddings; cached scouting reports regenerate on demand via POST /reports/players/{id}."
     )
 
 

@@ -56,6 +56,9 @@ class FakeConnection:
             raise AssertionError("FakeConnection: no more queued responses")
         return FakeResult(self._responses.pop(0))
 
+    def commit(self):
+        """No-op: nothing is actually persisted in a unit test double."""
+
 
 @pytest.fixture
 def make_client():

@@ -69,13 +69,13 @@ data/raw/*.csv
 |---|---|
 | `data/raw/` | Source CSV + dataset info. Gitignored (large, not committed) — see §4 for why. |
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
-| `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `rate_limit.py` (in-memory limiter for `/chat/*`), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
+| `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `rate_limit.py` (in-memory limiter shared by `/chat/*` and `/reports/*`), `routers/` (`analytics.py`, `predict.py`, `chat.py`, `reports.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
 | `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (player + team summary text builders, shared fastembed wrapper), `generate_embeddings.py` / `generate_team_embeddings.py` (populate `player_embeddings` / `team_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
 | `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`, `/predict`, `/chat`. |
-| `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`. |
+| `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`, `ScoutingReport` (player profile page). |
 | `frontend/src/lib/api.ts` | Typed fetch client for the backend API. |
 | `infra/` | Terraform: `main.tf` (resource group), `postgres.tf`, `storage.tf`, `keyvault.tf`, `container_apps.tf`, `budget.tf`. |
 | `.github/workflows/` | CI/CD (Phase 4). |
@@ -102,16 +102,20 @@ data/raw/*.csv
    `total_minutes_tournament` fluctuates non-monotonically across their match rows).
    The materialized views instead `SUM`/`AVG` the granular per-match stats, which are
    internally consistent.
-4. **Re-running the ETL wipes `player_embeddings` and `team_embeddings`, every time,
-   not just on a first run**: `load_tables()`'s `truncate table ... cascade` cascades
-   into *any* table with a foreign key into `players`/`teams` — that includes both
-   embedding tables (`player_embeddings.player_id`, `team_embeddings.team_name` are
-   FKs), not just the four tables the ETL directly manages. `load.py` prints an
-   explicit reminder at the end of every run to regenerate them
-   (`make genai-embed && make genai-embed-teams`) rather than leaving this silent.
-   Preserving embeddings across an ETL rerun would need a different reload strategy
-   (diff/upsert instead of truncate+reload) — not done, since truncate+reload's
-   simplicity is what makes the ETL trivially idempotent in the first place.
+4. **Re-running the ETL wipes `player_embeddings`, `team_embeddings`, and
+   `player_reports`, every time, not just on a first run**: `load_tables()`'s
+   `truncate table ... cascade` cascades into *any* table with a foreign key into
+   `players`/`teams` — that includes all three of those tables
+   (`player_embeddings.player_id`, `team_embeddings.team_name`,
+   `player_reports.player_id` are FKs), not just the four tables the ETL directly
+   manages. `load.py` prints an explicit reminder at the end of every run: regenerate
+   embeddings (`make genai-embed && make genai-embed-teams`); cached scouting reports
+   regenerate on demand per-player (`POST /reports/players/{id}`), not in bulk, so
+   there's nothing to re-run for those beyond visiting the player pages that need one
+   again. Preserving any of these across an ETL rerun would need a different reload
+   strategy (diff/upsert instead of truncate+reload) — not done, since
+   truncate+reload's simplicity is what makes the ETL trivially idempotent in the
+   first place.
 
 ### 4.2 Backend (`backend/`)
 
@@ -203,16 +207,33 @@ configured; `/chat/ask` returns 503 (not a bare 500) if generation fails, matchi
 
 **Rate limiting built**: `backend/app/rate_limit.py` is a small in-memory, per-client-IP
 fixed-window limiter (20 requests / 60s, shared across `/chat/retrieve` and
-`/chat/ask`), wired in as a FastAPI dependency. Hand-rolled rather than a dependency
-like `slowapi` — same call already made for structured logging (`logging_config.py`):
-the payoff for one more package isn't there yet at this project's size. In-memory means
-it only tracks hits within a single process; fine for the single Container Apps
-instance this project targets, but a multi-instance deployment would need a shared
-store (Redis) instead. Returns `429` with a `Retry-After` header once tripped; verified
-live. Tests reset the limiter's state between runs via an autouse fixture
-(`conftest.py`) so they don't trip each other's limits.
+`/chat/ask`, and later `POST /reports/players/{id}` — see below), wired in as a
+FastAPI dependency. Hand-rolled rather than a dependency like `slowapi` — same call
+already made for structured logging (`logging_config.py`): the payoff for one more
+package isn't there yet at this project's size. In-memory means it only tracks hits
+within a single process; fine for the single Container Apps instance this project
+targets, but a multi-instance deployment would need a shared store (Redis) instead.
+Returns `429` with a `Retry-After` header once tripped; verified live. Tests reset the
+limiter's state between runs via an autouse fixture (`conftest.py`) so they don't
+trip each other's limits.
 
-**Not yet built**: NL→chart, auto-generated/cached reports.
+**Auto-generated, cached scouting reports built**: `POST /reports/players/{id}`
+(`backend/app/routers/reports.py`) calls `generate_player_report()`
+(`backend/genai/llm.py`) with the player's `build_summary_text()` season summary
+(reused as-is from the embeddings pipeline — no duplicated stats-formatting logic)
+plus their 5 most recent matches, and caches the result in a new `player_reports`
+table. `GET /reports/players/{id}` serves the cached version, 404 if none exists yet —
+repeat views cost nothing. `generate_answer()` and `generate_player_report()` now
+share a `_complete()` helper in `llm.py` for the actual Groq call + token-usage
+logging, so both generation paths log consistently. Shares the chat rate limiter
+(same cost-protection budget across every Groq-calling endpoint). Frontend:
+`ScoutingReport.tsx`, a client component embedded on the player profile page —
+"Generate report" when none exists, "Regenerate" once one does. Verified live,
+end-to-end, two players (fresh generation + pre-cached load).
+
+**Not yet built**: NL→chart, auto-generated match recaps (the team/match-level
+counterpart to player scouting reports — same pattern, not yet applied to
+teams/matches).
 
 ## 5. Tech stack & why
 

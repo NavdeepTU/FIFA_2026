@@ -9,7 +9,7 @@ from app.config import settings
 from app.db import engine
 from app.logging_config import configure_logging, request_id_var
 from app.middleware import RequestContextMiddleware
-from app.routers import analytics, chat, predict
+from app.routers import analytics, chat, predict, reports
 
 configure_logging()
 logger = logging.getLogger("app")
@@ -42,6 +42,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 app.include_router(analytics.router)
 app.include_router(predict.router)
 app.include_router(chat.router)
+app.include_router(reports.router)
 
 
 @app.get("/health")

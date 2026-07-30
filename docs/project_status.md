@@ -31,7 +31,7 @@ it should always reflect what's actually working right now, not what's planned (
   `/health/ready` (checks Postgres connectivity). Groq calls additionally log
   model/prompt/completion/total token counts and latency per request (`app.genai`
   logger) — the raw material for a future token-usage dashboard.
-- 28 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
+- 34 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
   integration tests against a real Postgres (that's a Phase 4/CI concern).
 - ruff-clean (`pyproject.toml` at repo root, `make lint`).
 
@@ -125,8 +125,31 @@ it should always reflect what's actually working right now, not what's planned (
   comment-only, so the table was silently never created on any fresh load despite
   `load.py` reporting success. Fixed (`split_sql_statements`) and regression-tested
   (`etl/tests/test_load.py`).
-- Not done yet: NL→chart and auto-generated/cached reports — see "Not started yet"
-  below.
+- **Auto-generated, cached scouting reports**: `POST /reports/players/{id}`
+  (`backend/app/routers/reports.py`) generates a 3-4 paragraph scouting report via
+  Groq — playing style/strengths, weaknesses, a notable recent performance — grounded
+  in the player's real season summary (`build_summary_text()`, reused from the
+  embeddings pipeline) plus their 5 most recent matches for form/narrative color.
+  Cached in a new `player_reports` table (`etl/schema.sql`); `GET
+  /reports/players/{id}` returns the cached version (404 if none yet) without
+  spending a Groq call. `generate_player_report()` (`backend/genai/llm.py`) shares the
+  Groq client/logging helper `generate_answer()` uses, refactored into a common
+  `_complete()` so both go through the same token-usage logging. Shares the same
+  rate limiter as `/chat/*` (same cost-protection budget). Frontend:
+  `ScoutingReport.tsx`, embedded on the player profile page — shows a "Generate
+  report" button when none exists, "Regenerate" once one does, with a loading state
+  while Groq responds. Verified live end-to-end, two players: a fresh player showed
+  the empty state, generated a report citing exact stats (goals, xG, tackles, a
+  specific recent match with rating), and cached it (confirmed via a second request
+  returning instantly with the same timestamp, no new Groq call); a player with an
+  existing report loaded it immediately on page visit. Schema pushed to the deployed
+  Azure Postgres too (`player_reports` table now exists there — empty, as expected,
+  since reports generate on demand rather than in bulk); the CASCADE-wipe re-ran
+  `etl/load.py` triggered again on `player_embeddings`/`team_embeddings` as documented
+  above, both regenerated against Azure and reverified (1248 players, 48 teams).
+- Not done yet: NL→chart and auto-generated match recaps (scouting reports are
+  player-only; team/match recaps would follow the same pattern) — see "Not started
+  yet" below.
 
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
@@ -206,10 +229,11 @@ it should always reflect what's actually working right now, not what's planned (
 ## Not started yet
 
 - **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
-  rate limiting, and a frontend chat UI are all built (see above) — the core RAG
-  feature works end-to-end, backend and frontend, answers both player- and team-level
-  questions, with a real usage safety net. Still unbuilt: natural-language → chart,
-  auto-generated/cached reports.
+  rate limiting, auto-generated/cached scouting reports, and a frontend chat UI are
+  all built (see above) — the core RAG feature works end-to-end, backend and frontend,
+  answers both player- and team-level questions, with a real usage safety net. Still
+  unbuilt: natural-language → chart, auto-generated match recaps (team/match-level
+  counterpart to the player scouting reports).
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
   Docker image for the API (Container App currently runs a placeholder hello-world
   image — the database behind it is populated and ready, but nothing is actually

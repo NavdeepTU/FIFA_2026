@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { DataTable } from "@/components/DataTable";
+import { ScoutingReport } from "@/components/ScoutingReport";
 import { StatTile } from "@/components/StatTile";
 import { getPlayerProfile } from "@/lib/api";
 
@@ -36,6 +37,8 @@ export default async function PlayerProfilePage({
         <StatTile label="Assists" value={profile.assists} />
         <StatTile label="Avg rating" value={profile.avg_player_rating?.toFixed(1)} />
       </section>
+
+      <ScoutingReport playerId={profile.player_id} />
 
       <section className="flex flex-col gap-3">
         <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>

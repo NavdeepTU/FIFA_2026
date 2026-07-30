@@ -149,6 +149,23 @@ export type ChatAskResponse = {
 export const askChat = (query: string, top_k = 5) =>
   apiPost<ChatAskResponse>("/chat/ask", { query, top_k });
 
+export type ScoutingReport = {
+  player_id: string;
+  player_name: string;
+  report_text: string;
+  generated_at: string;
+};
+
+export async function getPlayerReport(playerId: string): Promise<ScoutingReport | null> {
+  const res = await fetch(`${API_BASE_URL}/reports/players/${playerId}`, { cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API /reports/players/${playerId} failed: ${res.status}`);
+  return res.json() as Promise<ScoutingReport>;
+}
+
+export const generatePlayerReport = (playerId: string) =>
+  apiPost<ScoutingReport>(`/reports/players/${playerId}`, {});
+
 export const getMatches = (stage?: string, team?: string) => {
   const params = new URLSearchParams();
   if (stage) params.set("stage", stage);
