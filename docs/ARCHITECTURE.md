@@ -60,7 +60,7 @@ data/raw/*.csv
   ml/ (backend/ml/) — offline training, artifacts → backend/ml/artifacts/, loaded by
   the API at request time; NOT retrained on every request.
 
-  infra/ — Terraform (azurerm). Provisions everything above. Not yet applied — see §7.
+  infra/ — Terraform (azurerm). Provisions everything above. Applied — see §7.
 ```
 
 ## 3. Repository layout
@@ -234,11 +234,30 @@ it's a recurring constraint on this machine, not a one-time fix.
 
 ## 7. Cloud deployment (Azure, via Terraform)
 
-Not yet applied. See `infra/README.md` for the exact bootstrap steps (Cloud Shell login,
-remote state bootstrap, `terraform apply`). Summary of the cost posture: every resource
-is sized to the free tier / always-free grant (Postgres B1MS, Container Apps consumption
-plan, Blob Storage under 5GB, no CDN), and an actual Azure Budget + alert
-(`infra/budget.tf`) is the real backstop — not just careful sizing.
+**Applied** — all 23 resources exist in Azure under `rg-fifa26-dev` (verified via
+`az resource list`). See `infra/README.md` for the bootstrap steps (remote state setup,
+`terraform apply`); local Azure CLI + Terraform, not Cloud Shell (see `CLAUDE.md`'s
+disk-constraint note). Cost posture: every resource is sized to the free tier /
+always-free grant (Postgres B1MS, Container Apps consumption plan, Blob Storage under
+5GB, no CDN), and an actual Azure Budget + alert (`infra/budget.tf`) is the real
+backstop — not just careful sizing.
+
+**Postgres lives in a different region than everything else** (`eastus2` vs. `eastus`,
+`var.postgres_location` in `variables.tf`/`postgres.tf`) — a deliberate deviation from
+the original single-region design, forced by Azure rejecting Postgres Flexible Server
+creation in `eastus` for this (brand-new) subscription with `LocationIsOfferRestricted`.
+Every other resource type provisioned in `eastus` without issue, so only the database
+moved. This is specific to new subscriptions in high-demand regions, not a permanent
+property of the account — worth revisiting (`var.postgres_location` back to matching
+`var.location`) once the subscription has some age/usage history, if consolidating
+everything into one region becomes worthwhile (mainly: no real latency concern for a
+low-traffic portfolio project as-is).
+
+**What's deployed but not yet real**: the `api` Container App is running Microsoft's
+`containerapps-helloworld` placeholder image — the project's own Docker image hasn't
+been built/pushed yet (Phase 4/CI-CD). The Postgres database exists but is empty; the
+ETL hasn't been pointed at it. Both are the natural next steps once this phase's
+learning goals (successfully standing up real infra) are consolidated.
 
 ## 8. ML models (Phase 2)
 
@@ -307,7 +326,7 @@ dashboard (cost/FinOps angle even though the API itself is free).
 - [x] Frontend: dashboard pages, charts, verified build + graceful no-backend fallback
 - [x] Terraform: full minimal-cost Azure stack written
 - [x] Architecture reference doc (this file)
-- [ ] Azure resources actually provisioned (blocked on your `az login` / Cloud Shell step)
+- [x] Azure resources actually provisioned (23 resources, `rg-fifa26-dev` — see §7)
 - [x] Phase 2: ML models trained + served (rating regressor, outcome classifier,
       archetype clustering) + frontend what-if predictor, verified end-to-end
 - [ ] Phase 3: GenAI RAG layer (Groq)

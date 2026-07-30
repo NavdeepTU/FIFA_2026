@@ -13,18 +13,26 @@ terraform {
   }
 
   # State is kept remote so GitHub Actions and your machine share the same view of
-  # what's deployed. Create this storage account/container manually once (az cli),
-  # then uncomment. Left commented so a first `terraform init` doesn't fail before
-  # that bootstrap step exists.
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-fifa-tfstate"
-  #   storage_account_name = "fifatfstate<unique>"
-  #   container_name       = "tfstate"
-  #   key                  = "fifa.tfstate"
-  # }
+  # what's deployed. Bootstrapped once via az cli (resource group + storage account +
+  # container) -- see infra/README.md.
+  backend "azurerm" {
+    resource_group_name  = "rg-fifa-tfstate"
+    storage_account_name = "fifatfstatend26"
+    container_name       = "tfstate"
+    key                  = "fifa.tfstate"
+  }
 }
 
 provider "azurerm" {
+  # By default the provider tries to auto-register every Azure resource provider it
+  # supports (~200 of them), not just the ones this config uses -- on a brand-new
+  # subscription one of those unrelated registrations (Microsoft.DataMigration, which
+  # this project never touches) hung for hours waiting on a slow ARM response. The
+  # providers this project actually needs (Storage, DBforPostgreSQL, KeyVault, App,
+  # OperationalInsights, ContainerRegistry, Consumption) were already registered
+  # manually via `az provider register`, so skip Terraform's auto-registration.
+  resource_provider_registrations = "none"
+
   features {
     key_vault {
       purge_soft_delete_on_destroy    = true

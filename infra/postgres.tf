@@ -1,9 +1,15 @@
 # B1MS burstable is the SKU eligible for Azure's 12-months-free allowance (750 hrs/month,
 # 32GB storage) -- running one instance continuously stays inside that free amount.
 resource "azurerm_postgresql_flexible_server" "this" {
-  name                = "psql-${local.name_prefix}-${random_string.suffix.result}"
+  # "-eus2" suffix: a first attempt at this name failed in eastus (LocationIsOfferRestricted)
+  # and Azure held onto the name in ARM's naming cache even though the resource itself
+  # doesn't exist (confirmed via `az postgres flexible-server show` -> ResourceNotFound) --
+  # rather than wait an unknown amount of time for that reservation to clear, use a
+  # distinct name for the retry in postgres_location.
+  name                = "psql-${local.name_prefix}-${random_string.suffix.result}-eus2"
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  # Deliberately not azurerm_resource_group.this.location -- see var.postgres_location.
+  location = var.postgres_location
 
   sku_name = "B_Standard_B1ms"
   version  = "16"

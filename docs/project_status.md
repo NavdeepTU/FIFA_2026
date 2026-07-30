@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-07-29. Update this file whenever a task completes or scope changes —
+Last updated: 2026-07-30. Update this file whenever a task completes or scope changes —
 it should always reflect what's actually working right now, not what's planned (that's
 `project_scope.md`).
 
@@ -109,13 +109,45 @@ it should always reflect what's actually working right now, not what's planned (
 - Not done yet: NL→chart and auto-generated/cached reports — see "Not started yet"
   below.
 
-### Infrastructure (Terraform, azurerm)
-- Full minimal-cost stack written: resource group, Postgres Flexible Server (B1MS),
-  Blob Storage (data lake + static site, no CDN), Key Vault, Container Apps
-  (API + self-hosted Grafana), Azure Budget + cost alert.
-- **Not yet applied** — no resources actually exist in Azure yet. Blocked on the user
-  running `az login` (via Cloud Shell, to avoid installing the CLI locally) and
-  providing an alert email + region confirmation.
+### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
+- All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
+  Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
+  Container Apps environment + 2 apps (API, Grafana), Log Analytics, Application
+  Insights, managed identity + 2 role assignments, and the $10/month budget alert
+  (navdeep98.sharma@gmail.com). Verified live via `az resource list -g rg-fifa26-dev`.
+- Local tooling: Azure CLI + Terraform installed via `brew`/`hashicorp/tap` (disk
+  constraint eased, see `CLAUDE.md`). Remote state lives in a separate bootstrap
+  resource group (`rg-fifa-tfstate`, storage account `fifatfstatend26`, container
+  `tfstate`) so a laptop and future CI share the same state — backend config is
+  uncommented in `infra/versions.tf`.
+- **Postgres is in `eastus2`, everything else in `eastus`** (`var.postgres_location`,
+  `infra/variables.tf`) — not the original design. Azure rejected the first Postgres
+  create attempt with `LocationIsOfferRestricted`: brand-new subscriptions are blocked
+  from provisioning Postgres Flexible Server in some high-demand regions (`eastus`
+  included) until the subscription has some usage history. Everything else provisioned
+  in `eastus` without issue, so only the database moved rather than the whole stack.
+- **Two secrets pre-generated, not user-supplied**: a random Postgres admin password
+  (`openssl rand`, stored in `infra/.env.secrets`, gitignored) and the existing
+  `GROQ_API_KEY` from `backend/.env`, both fed to Terraform via `TF_VAR_*` env vars
+  rather than the tracked `terraform.tfvars` file, and both landed in Key Vault as the
+  real secret store — never committed to git.
+- **What's still placeholder**: the `api` Container App is running Microsoft's
+  `containerapps-helloworld` image, not the project's actual FastAPI code — building
+  and pushing a real image is Phase 4 (CI/CD) work, not done yet. The database is live
+  but empty — the ETL hasn't been pointed at it yet. Both are natural next tasks.
+- **Provisioning was rocky and is worth documenting honestly**: the very first
+  `terraform plan` hung for 3.5+ hours (not actually frozen, just an unrelated Azure
+  resource provider — `Microsoft.DataMigration`, never used by this project — stuck
+  retrying its own auto-registration). Fixed by setting
+  `resource_provider_registrations = "none"` in the `azurerm` provider block
+  (`infra/versions.tf`) and relying on the providers already registered manually via
+  `az provider register`. Several stale Terraform state locks came from having to
+  force-kill that hang before the root cause was found — cleared via
+  `terraform force-unlock`. One `azurerm_container_app_environment` and (briefly) one
+  `azurerm_postgresql_flexible_server` ended up existing in Azure without being in
+  Terraform's state (created successfully server-side, but the client lost track —
+  once from an interrupted poll, once from an expired `az login` token mid-poll) —
+  both recovered with `terraform import` rather than destroying and recreating.
 
 ### Docs / process
 - `docs/ARCHITECTURE.md` — living system reference.
@@ -132,11 +164,12 @@ it should always reflect what's actually working right now, not what's planned (
   chart, auto-generated/cached reports, and team-level summaries (`player_embeddings`
   is player-only; a question like "which team had the best defense?" has no team
   embeddings to retrieve against yet).
-- **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, Azure Monitor/App
-  Insights wiring (env var is already passed to the container, just unused), Grafana
-  dashboards, Sentry, load testing.
-- **Azure provisioning**: `terraform apply` hasn't been run. Everything currently runs
-  locally only.
+- **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
+  Docker image for the API (Container App currently runs a placeholder hello-world
+  image), Azure Monitor/App Insights wiring (env var is already passed to the
+  container, just unused), Grafana dashboards, Sentry, load testing.
+- **Populate the deployed database**: run the ETL (and `make genai-embed`) against the
+  real Postgres Flexible Server now that it exists — currently empty.
 
 ## Known limitations / honest caveats
 

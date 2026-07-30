@@ -20,9 +20,12 @@ frontend/out/
 infra/.terraform/
 infra/*.tfstate
 infra/*.tfstate.*
-infra/.terraform.lock.hcl
 infra/*.tfvars
 !infra/*.tfvars.example
+infra/tfplan*.out
+infra/.env.secrets
+# .terraform.lock.hcl is intentionally NOT ignored -- Terraform recommends committing
+# it so local and CI always resolve the same provider versions.
 
 # os / editor
 .DS_Store

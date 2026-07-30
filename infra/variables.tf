@@ -10,6 +10,12 @@ variable "location" {
   default     = "eastus"
 }
 
+variable "postgres_location" {
+  description = "Region for Postgres Flexible Server specifically -- separate from `location` because Azure restricts brand-new subscriptions from provisioning Postgres Flexible Server in some high-demand regions (eastus included, error LocationIsOfferRestricted). Everything else stays in `location`; only the database moves if it hits this."
+  type        = string
+  default     = "eastus2"
+}
+
 variable "environment" {
   type    = string
   default = "dev"
