@@ -148,6 +148,18 @@ it should always reflect what's actually working right now, not what's planned (
   Terraform's state (created successfully server-side, but the client lost track —
   once from an interrupted poll, once from an expired `az login` token mid-poll) —
   both recovered with `terraform import` rather than destroying and recreating.
+- **Deployed database is populated**: ran `etl/load.py` and
+  `backend/genai/generate_embeddings.py` directly against the real Azure Postgres
+  Flexible Server (connecting from a laptop across the `allow-dev-ip` firewall rule).
+  Verified via row counts matching the local dataset exactly: 48 teams, 1248 players,
+  1050 matches, 54600 stat rows, 1248 embeddings. The embeddings step hit a genuine
+  transient network stall on the first attempt (confirmed server-side via
+  `pg_stat_activity` — the connection was `idle in transaction` waiting on
+  `ClientRead` for several minutes on one row, not a slow-but-progressing case like
+  the earlier Terraform hangs) and succeeded cleanly on a straight retry — worth
+  knowing this can happen on a single-row-per-round-trip upsert to a database that's
+  geographically distant from the client, and that checking `pg_stat_activity` is the
+  fast way to tell "stalled" from "just slow" server-side.
 
 ### Docs / process
 - `docs/ARCHITECTURE.md` — living system reference.
@@ -166,10 +178,9 @@ it should always reflect what's actually working right now, not what's planned (
   embeddings to retrieve against yet).
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
   Docker image for the API (Container App currently runs a placeholder hello-world
-  image), Azure Monitor/App Insights wiring (env var is already passed to the
+  image — the database behind it is populated and ready, but nothing is actually
+  serving it yet), Azure Monitor/App Insights wiring (env var is already passed to the
   container, just unused), Grafana dashboards, Sentry, load testing.
-- **Populate the deployed database**: run the ETL (and `make genai-embed`) against the
-  real Postgres Flexible Server now that it exists — currently empty.
 
 ## Known limitations / honest caveats
 
