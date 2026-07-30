@@ -381,13 +381,30 @@ you edit a stat line, verified end-to-end against the real trained model.
   class of failure ("green locally, red in CI") that's specific to steps CI runs but
   local development never touches.
 
+- **Azure Monitor / Application Insights** (`backend/app/main.py`, `backend/app/
+  config.py`): `configure_azure_monitor()` from the `azure-monitor-opentelemetry`
+  package runs at startup when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set (no-op
+  locally without it). This is Microsoft's OpenTelemetry Distro for Azure Monitor —
+  one call configures the OpenTelemetry SDK to export to Application Insights *and*
+  auto-instruments FastAPI, `requests`, and `psycopg2` via their standard OTel
+  instrumentation packages (pulled in automatically as sub-dependencies), so request
+  traces and DB spans need no per-route code changes. Called after
+  `configure_logging()` specifically because it *adds* a handler to the `"app"`
+  logger rather than replacing root's handler list, so stdout JSON logs and the
+  Application Insights export both stay active. Verified against the real
+  `appi-fifa26-dev` resource: ran the API locally with the live connection string,
+  hit a few endpoints, confirmed every exported batch got `200` from the ingestion
+  endpoint, and confirmed the requests were queryable via `az monitor app-insights
+  query`. Not yet exercised through the actual deployed Container App, since that
+  still runs the placeholder image (see below) — the wiring itself needs no further
+  changes once a real image ships, since it already reads the connection string
+  from the environment that `infra/container_apps.tf` already passes in.
+
 **Still Phase 4**: building/pushing a real Docker image for the API on merge (needs a
 container registry + OIDC federated credentials, neither set up yet) and `terraform
-apply` on merge; Azure Monitor + Application Insights wired to the deployed Container
-App (the `APPLICATIONINSIGHTS_CONNECTION_STRING` env var is already passed in
-`infra/container_apps.tf`, just not consumed by the app yet), self-hosted Grafana
-dashboards on top, Sentry for frontend/backend error tracking, and a Groq token-usage
-dashboard (cost/FinOps angle even though the API itself is free).
+apply` on merge; self-hosted Grafana dashboards on top of Application Insights, Sentry
+for frontend/backend error tracking, and a Groq token-usage dashboard (cost/FinOps
+angle even though the API itself is free).
 
 ## 10. Status checklist
 
@@ -404,5 +421,6 @@ dashboard (cost/FinOps angle even though the API itself is free).
 - [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
       limiting, player + team scouting reports, all live on Azure. Remaining:
       NL→chart, match recaps (see §4.5)
-- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI built
-      (see §9); Docker/registry, `terraform apply` on merge, and monitoring not yet
+- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI and
+      Application Insights wiring both built and verified (see §9); Docker/registry,
+      `terraform apply` on merge, Grafana, and Sentry not yet

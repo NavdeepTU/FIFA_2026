@@ -14,6 +14,24 @@ from app.routers import analytics, chat, predict, reports
 configure_logging()
 logger = logging.getLogger("app")
 
+if settings.applicationinsights_connection_string:
+    # Azure Monitor OpenTelemetry Distro: one call wires up the OpenTelemetry SDK to
+    # export to Application Insights and auto-instruments FastAPI/requests/psycopg2
+    # via their standard OTel instrumentation packages -- must run before `FastAPI()`
+    # is constructed below so the FastAPI instrumentor can patch it. Runs after
+    # configure_logging() (not before) because it *adds* a handler to the root logger
+    # rather than replacing it, so both destinations (stdout JSON for local/container
+    # log streams, Application Insights for the deployed API) stay active together.
+    from azure.monitor.opentelemetry import configure_azure_monitor
+
+    configure_azure_monitor(
+        connection_string=settings.applicationinsights_connection_string,
+        logger_name="app",
+    )
+    logger.info("application_insights_configured")
+else:
+    logger.info("application_insights_not_configured")
+
 app = FastAPI(title="FIFA World Cup 2026 Analytics API")
 
 app.add_middleware(

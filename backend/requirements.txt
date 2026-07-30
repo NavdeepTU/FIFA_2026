@@ -18,3 +18,10 @@ fastembed==0.8.0
 
 # serving /chat/ask -- Groq client for RAG answer generation
 groq==1.6.0
+
+# Azure Monitor OpenTelemetry Distro -- ships logs/traces/metrics to Application
+# Insights when APPLICATIONINSIGHTS_CONNECTION_STRING is set (no-op locally without
+# it). One call (configure_azure_monitor) auto-instruments FastAPI, requests, and
+# psycopg2 via OpenTelemetry's standard instrumentation packages, so request traces
+# and DB spans show up with no per-route code changes.
+azure-monitor-opentelemetry==1.8.9

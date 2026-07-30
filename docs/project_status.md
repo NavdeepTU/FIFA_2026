@@ -1,8 +1,8 @@
 # Project Status
 
-Last updated: 2026-07-30. Update this file whenever a task completes or scope changes —
-it should always reflect what's actually working right now, not what's planned (that's
-`project_scope.md`).
+Last updated: 2026-07-30 (Application Insights wiring). Update this file whenever a
+task completes or scope changes — it should always reflect what's actually working
+right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -206,6 +206,37 @@ it should always reflect what's actually working right now, not what's planned (
   of "passes every local check, still red in CI," specifically because CI exercises a
   step (cache save/restore) that local development never touches at all.
 
+### Observability (Phase 4, second slice)
+- `backend/app/main.py` now calls `configure_azure_monitor()` (the
+  `azure-monitor-opentelemetry` package — Microsoft's OpenTelemetry distro for Azure
+  Monitor) at startup, but only when `APPLICATIONINSIGHTS_CONNECTION_STRING` is set
+  (`backend/app/config.py`). Local dev without the env var is an explicit no-op —
+  confirmed via the full test suite passing with it unset. One call auto-instruments
+  FastAPI, `requests`, and `psycopg2` via their standard OpenTelemetry instrumentation
+  packages (all pulled in automatically as sub-dependencies), so request traces and DB
+  spans need no per-route code. It's called after `configure_logging()`, not before —
+  it *adds* a handler to the `"app"` logger rather than replacing it, so stdout JSON
+  logs (for local dev / `az containerapp logs`) and the Application Insights export
+  stay active together rather than one clobbering the other.
+- Verified live against the real deployed `appi-fifa26-dev` resource (not just
+  locally): ran the API locally with the real connection string (fetched via `az
+  monitor app-insights component show`) for one verification pass, hit `/health`,
+  `/health/ready`, and `/analytics/standings`, and confirmed every exported telemetry
+  batch got `Response status: 200` from the ingestion endpoint; a KQL query
+  (`az monitor app-insights query`) against the workspace found the requests queryable
+  shortly after (a couple of retries returned 0 rows in between — Log Analytics query
+  nodes have some eventual-consistency lag right after ingestion, not a sign of a
+  problem, since the HTTP 200s and the eventual successful query already confirm data
+  landed). The connection string was **not** added to local `backend/.env` — only the
+  deployed Container App should export telemetry by default, so local dev traffic
+  doesn't mix into the same Application Insights resource as production data.
+- Not yet true end-to-end: the Container App itself still runs the placeholder
+  hello-world image (see Infrastructure section below), so this is verified via a
+  local process talking to the real Application Insights resource, not yet via the
+  actually-deployed container. Once the Docker/registry piece of Phase 4 ships a real
+  image, this wiring needs no further changes — it already reads the connection string
+  from the environment, which `infra/container_apps.tf` already passes in.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -289,13 +320,15 @@ it should always reflect what's actually working right now, not what's planned (
   backend and frontend, answers both player- and team-level questions, with a real
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
-- **Phase 4 (observability/CI/CD)**: lint + test CI is built (see above). Still
-  unbuilt: building/pushing a real Docker image for the API on merge (needs a
-  container registry + OIDC federated credentials first — Container App currently
-  runs a placeholder hello-world image; the database behind it is populated and
-  ready, but nothing is actually serving it yet), `terraform apply` on merge, Azure
-  Monitor/App Insights wiring (env var is already passed to the container, just
-  unused), Grafana dashboards, Sentry, load testing.
+- **Phase 4 (observability/CI/CD)**: lint + test CI is built, and Application
+  Insights wiring is built and verified live (see above). Still unbuilt:
+  building/pushing a real Docker image for the API on merge (needs a container
+  registry + OIDC federated credentials first — Container App currently runs a
+  placeholder hello-world image; the database behind it is populated and ready, but
+  nothing is actually serving it yet — this is also what would let the Application
+  Insights wiring be verified end-to-end via the real deployed container, not just a
+  local process talking to the real resource), `terraform apply` on merge, Grafana
+  dashboards, Sentry, load testing.
 
 ## Known limitations / honest caveats
 
