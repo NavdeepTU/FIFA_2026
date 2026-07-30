@@ -1,9 +1,10 @@
 """Groq-backed text generation, behind a provider-agnostic interface.
 
-`generate_answer()` and `generate_player_report()` are the only things routers depend
-on -- swapping Groq for another provider later means writing new functions with these
-signatures, not touching the routers. Groq specifically because it has a generous free
-tier and fast inference; see docs/ARCHITECTURE.md sections 4.5 and 5.
+`generate_answer()`, `generate_player_report()`, and `generate_team_report()` are the
+only things routers depend on -- swapping Groq for another provider later means
+writing new functions with these signatures, not touching the routers. Groq
+specifically because it has a generous free tier and fast inference; see
+docs/ARCHITECTURE.md sections 4.5 and 5.
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ CHAT_SYSTEM_PROMPT = (
     "doesn't contain enough information to answer, say so plainly rather than guessing."
 )
 
-REPORT_SYSTEM_PROMPT = (
+PLAYER_REPORT_SYSTEM_PROMPT = (
     "You are a professional football scout writing a short scouting report on a player, "
     "using ONLY the stats given below -- do not invent achievements, transfer history, or "
     "biographical details not present in the data. Write 3-4 short paragraphs covering: "
@@ -32,6 +33,17 @@ REPORT_SYSTEM_PROMPT = (
     "combative midfielder), weaknesses or areas for improvement, and a notable recent "
     "performance if the match log shows one. Cite specific numbers. Write in plain "
     "professional prose, no headers or bullet points."
+)
+
+TEAM_REPORT_SYSTEM_PROMPT = (
+    "You are a professional football analyst writing a short scouting report on a "
+    "national team, using ONLY the stats given below -- do not invent results, squad "
+    "names, or history not present in the data. Write 3-4 short paragraphs covering: "
+    "the team's playing style and strengths (inferred from the stats -- e.g. a high "
+    "tackle count suggests a combative, defensively organized side), weaknesses or "
+    "areas for improvement, and a notable recent result if the match log shows one. "
+    "Cite specific numbers. Write in plain professional prose, no headers or bullet "
+    "points."
 )
 
 _client = None
@@ -102,7 +114,28 @@ def generate_player_report(summary: str, recent_matches: list[dict]) -> str:
         match_lines = "(no match log available)"
 
     return _complete(
-        REPORT_SYSTEM_PROMPT,
+        PLAYER_REPORT_SYSTEM_PROMPT,
+        f"Season summary:\n{summary}\n\nMost recent matches:\n{match_lines}",
+        max_tokens=500,
+    )
+
+
+def generate_team_report(summary: str, recent_matches: list[dict]) -> str:
+    """`summary` is the same build_team_summary_text() output used for team
+    embeddings; recent matches add form/narrative color a static summary doesn't
+    capture -- mirrors generate_player_report()'s shape.
+    """
+    if recent_matches:
+        match_lines = "\n".join(
+            f"- {m['match_date']} vs {m['opponent']} ({m['tournament_stage']}): "
+            f"{m['goals_for']}-{m['goals_against']}"
+            for m in recent_matches
+        )
+    else:
+        match_lines = "(no match log available)"
+
+    return _complete(
+        TEAM_REPORT_SYSTEM_PROMPT,
         f"Season summary:\n{summary}\n\nMost recent matches:\n{match_lines}",
         max_tokens=500,
     )

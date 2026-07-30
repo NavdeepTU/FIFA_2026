@@ -31,7 +31,7 @@ it should always reflect what's actually working right now, not what's planned (
   `/health/ready` (checks Postgres connectivity). Groq calls additionally log
   model/prompt/completion/total token counts and latency per request (`app.genai`
   logger) — the raw material for a future token-usage dashboard.
-- 34 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
+- 39 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
   integration tests against a real Postgres (that's a Phase 4/CI concern).
 - ruff-clean (`pyproject.toml` at repo root, `make lint`).
 
@@ -147,9 +147,30 @@ it should always reflect what's actually working right now, not what's planned (
   since reports generate on demand rather than in bulk); the CASCADE-wipe re-ran
   `etl/load.py` triggered again on `player_embeddings`/`team_embeddings` as documented
   above, both regenerated against Azure and reverified (1248 players, 48 teams).
-- Not done yet: NL→chart and auto-generated match recaps (scouting reports are
-  player-only; team/match recaps would follow the same pattern) — see "Not started
-  yet" below.
+- **Team scouting reports** (extends the above): `POST`/`GET /reports/teams/{team}`
+  mirror the player endpoints exactly — `build_team_summary_text()` (reused from team
+  embeddings) plus the team's 5 most recent matches (a `case when team_a = :team ...`
+  query over `matches` giving a team-centric opponent/goals-for/goals-against view,
+  since `matches` itself has no single "this team's perspective" column the way
+  `player_match_stats` does), cached in a new `team_reports` table.
+  `generate_team_report()` (`backend/genai/llm.py`) is a second thin wrapper around
+  the shared `_complete()` helper, with its own team-focused system prompt. Frontend:
+  `ScoutingReport.tsx` generalized to take `kind: "player" | "team"` + `id` instead of
+  a player-specific prop (it only ever rendered `report_text`/`generated_at`, so no
+  business logic needed duplicating — just which fetch/generate functions to call),
+  embedded on the team profile page the same way. Verified live: generated a report
+  for Brazil citing exact numbers (947 tackles, 761 interceptions, 53 goals conceded
+  in 45 matches, specific match results "2-0 win over the Netherlands", "1-3 loss to
+  Italy"), confirmed cached on a second request (13ms, same timestamp); player page
+  re-verified for regressions after the shared-component refactor — none. Schema
+  pushed to the deployed Azure Postgres too (`team_reports` table now exists there —
+  empty, as expected); the CASCADE-wipe fired again on `player_embeddings`/
+  `team_embeddings` as documented, both regenerated against Azure and reverified
+  (1248 players, 48 teams).
+- Not done yet: natural-language → chart, auto-generated match recaps (the last
+  remaining "scouting reports / match recaps" item — match-level rather than
+  player/team-level, would need a per-match cache key and likely a frontend matches
+  page, which doesn't exist yet) — see "Not started yet" below.
 
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
@@ -229,11 +250,11 @@ it should always reflect what's actually working right now, not what's planned (
 ## Not started yet
 
 - **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
-  rate limiting, auto-generated/cached scouting reports, and a frontend chat UI are
-  all built (see above) — the core RAG feature works end-to-end, backend and frontend,
-  answers both player- and team-level questions, with a real usage safety net. Still
-  unbuilt: natural-language → chart, auto-generated match recaps (team/match-level
-  counterpart to the player scouting reports).
+  rate limiting, auto-generated/cached scouting reports (player and team), and a
+  frontend chat UI are all built (see above) — the core RAG feature works end-to-end,
+  backend and frontend, answers both player- and team-level questions, with a real
+  usage safety net. Still unbuilt: natural-language → chart, auto-generated match
+  recaps (the one remaining "reports" item — match-level, not player/team-level).
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
   Docker image for the API (Container App currently runs a placeholder hello-world
   image — the database behind it is populated and ready, but nothing is actually

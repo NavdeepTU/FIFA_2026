@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { generatePlayerReport, getPlayerReport, type ScoutingReport as ScoutingReportData } from "@/lib/api";
+import { generatePlayerReport, generateTeamReport, getPlayerReport, getTeamReport } from "@/lib/api";
 
-export function ScoutingReport({ playerId }: { playerId: string }) {
-  const [report, setReport] = useState<ScoutingReportData | null>(null);
+type ReportData = { report_text: string; generated_at: string };
+
+const FETCHERS: Record<"player" | "team", (id: string) => Promise<ReportData | null>> = {
+  player: getPlayerReport,
+  team: getTeamReport,
+};
+
+const GENERATORS: Record<"player" | "team", (id: string) => Promise<ReportData>> = {
+  player: generatePlayerReport,
+  team: generateTeamReport,
+};
+
+export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: string }) {
+  const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +24,7 @@ export function ScoutingReport({ playerId }: { playerId: string }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getPlayerReport(playerId)
+    FETCHERS[kind](id)
       .then((r) => {
         if (!cancelled) setReport(r);
       })
@@ -25,13 +37,13 @@ export function ScoutingReport({ playerId }: { playerId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [playerId]);
+  }, [kind, id]);
 
   const generate = async () => {
     setGenerating(true);
     setError(null);
     try {
-      const r = await generatePlayerReport(playerId);
+      const r = await GENERATORS[kind](id);
       setReport(r);
     } catch {
       setError("Could not generate a report right now. Is the backend running with a Groq API key set?");
@@ -75,7 +87,7 @@ export function ScoutingReport({ playerId }: { playerId: string }) {
 
       {!loading && !error && !report && (
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          No report yet — generate one from this player&apos;s real stats and recent matches.
+          No report yet — generate one from this {kind}&apos;s real stats and recent matches.
         </p>
       )}
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from genai.embeddings import build_summary_text
-from genai.llm import generate_player_report
+from genai.embeddings import build_summary_text, build_team_summary_text
+from genai.llm import generate_player_report, generate_team_report
 from pydantic import BaseModel
 from sqlalchemy import Connection, text
 
@@ -15,6 +15,12 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 class ScoutingReport(BaseModel):
     player_id: str
     player_name: str
+    report_text: str
+    generated_at: datetime
+
+
+class TeamScoutingReport(BaseModel):
+    team_name: str
     report_text: str
     generated_at: datetime
 
@@ -91,3 +97,75 @@ def generate_report(
         "report_text": row["report_text"],
         "generated_at": row["generated_at"],
     }
+
+
+def _fetch_team_context(team_name: str, db: Connection) -> dict | None:
+    profile = db.execute(
+        text(
+            "select s.team, s.matches_played, s.wins, s.draws, s.losses, s.goals_for, "
+            "s.goals_against, s.points, t.tackles, t.interceptions, t.clearances, t.saves, "
+            "t.clean_sheets, t.yellow_cards, t.red_cards, t.avg_pass_accuracy, t.avg_player_rating "
+            "from mv_team_standings s join mv_team_tournament_stats t on t.team = s.team "
+            "where s.team = :team"
+        ),
+        {"team": team_name},
+    ).mappings().first()
+    if not profile:
+        return None
+
+    matches = db.execute(
+        text(
+            "select match_date, tournament_stage, "
+            "case when team_a = :team then team_b else team_a end as opponent, "
+            "case when team_a = :team then goals_a else goals_b end as goals_for, "
+            "case when team_a = :team then goals_b else goals_a end as goals_against "
+            "from matches where team_a = :team or team_b = :team "
+            "order by match_date desc limit 5"
+        ),
+        {"team": team_name},
+    ).mappings().all()
+    return {"profile": dict(profile), "recent_matches": [dict(m) for m in matches]}
+
+
+@router.get("/teams/{team_name}", response_model=TeamScoutingReport)
+def get_cached_team_report(team_name: str, db: Connection = Depends(get_db)):
+    row = db.execute(
+        text("select team_name, report_text, generated_at from team_reports where team_name = :team"),
+        {"team": team_name},
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="no report generated yet for this team")
+    return row
+
+
+@router.post("/teams/{team_name}", response_model=TeamScoutingReport)
+def generate_team_report_route(
+    team_name: str, db: Connection = Depends(get_db), _rate_limit: None = Depends(rate_limit)
+):
+    """Mirrors POST /reports/players/{id} for teams: build_team_summary_text() (same
+    as team embeddings) plus the team's 5 most recent matches, generated via Groq,
+    cached in team_reports.
+    """
+    context = _fetch_team_context(team_name, db)
+    if not context:
+        raise HTTPException(status_code=404, detail="team not found")
+
+    summary = build_team_summary_text(context["profile"])
+    try:
+        report_text = generate_team_report(summary, context["recent_matches"])
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"generation unavailable: {e}") from e
+
+    row = db.execute(
+        text(
+            "insert into team_reports (team_name, report_text, generated_at) "
+            "values (:team, :report_text, now()) "
+            "on conflict (team_name) do update "
+            "set report_text = excluded.report_text, generated_at = excluded.generated_at "
+            "returning team_name, report_text, generated_at"
+        ),
+        {"team": team_name, "report_text": report_text},
+    ).mappings().first()
+    db.commit()
+
+    return row

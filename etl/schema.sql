@@ -126,6 +126,13 @@ create table if not exists player_reports (
     generated_at timestamptz default now()
 );
 
+-- Same idea as player_reports, one per team -- POST /reports/teams/{team}.
+create table if not exists team_reports (
+    team_name text primary key references teams(team_name),
+    report_text text not null,
+    generated_at timestamptz default now()
+);
+
 -- ==== Materialized aggregate views (Phase 1 analytics) ====
 
 drop materialized view if exists mv_player_tournament_stats;

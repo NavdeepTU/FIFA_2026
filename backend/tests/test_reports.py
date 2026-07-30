@@ -48,6 +48,42 @@ CACHED_REPORT_ROW = {
     "generated_at": "2026-07-30T12:00:00+00:00",
 }
 
+TEAM_PROFILE_ROW = {
+    "team": "France",
+    "matches_played": 34,
+    "wins": 12,
+    "draws": 11,
+    "losses": 11,
+    "goals_for": 53,
+    "goals_against": 50,
+    "points": 47,
+    "tackles": 733,
+    "interceptions": 543,
+    "clearances": 748,
+    "saves": 108,
+    "clean_sheets": 5,
+    "yellow_cards": 88,
+    "red_cards": 4,
+    "avg_pass_accuracy": 1.0,
+    "avg_player_rating": 3.58,
+}
+
+TEAM_MATCH_ROWS = [
+    {
+        "match_date": "2026-06-11",
+        "tournament_stage": "Group Stage",
+        "opponent": "Belgium",
+        "goals_for": 2,
+        "goals_against": 1,
+    }
+]
+
+CACHED_TEAM_REPORT_ROW = {
+    "team_name": "France",
+    "report_text": "France field a defensively organized side ...",
+    "generated_at": "2026-07-30T12:00:00+00:00",
+}
+
 
 def test_get_cached_report_404_when_none_exists(make_client):
     client = make_client([[]])
@@ -120,3 +156,57 @@ def test_generate_report_rate_limits_after_max_requests(make_client, monkeypatch
 
     resp = client.post("/reports/players/P00001")
     assert resp.status_code == 429
+
+
+def test_get_cached_team_report_404_when_none_exists(make_client):
+    client = make_client([[]])
+    resp = client.get("/reports/teams/France")
+    assert resp.status_code == 404
+
+
+def test_get_cached_team_report_returns_existing(make_client):
+    client = make_client([[CACHED_TEAM_REPORT_ROW]])
+    resp = client.get("/reports/teams/France")
+    assert resp.status_code == 200
+    assert resp.json()["report_text"] == CACHED_TEAM_REPORT_ROW["report_text"]
+
+
+def test_generate_team_report_404_when_team_not_found(make_client):
+    client = make_client([[]])
+    resp = client.post("/reports/teams/Nowhereland")
+    assert resp.status_code == 404
+
+
+def test_generate_team_report_success(make_client, monkeypatch):
+    captured = {}
+
+    def fake_generate_team_report(summary, recent_matches):
+        captured["summary"] = summary
+        captured["recent_matches"] = recent_matches
+        return "France field a defensively organized side with strong distribution."
+
+    monkeypatch.setattr(reports_router, "generate_team_report", fake_generate_team_report)
+
+    inserted_row = {
+        "team_name": "France",
+        "report_text": "France field a defensively organized side with strong distribution.",
+        "generated_at": "2026-07-30T12:00:00+00:00",
+    }
+    client = make_client([[TEAM_PROFILE_ROW], TEAM_MATCH_ROWS, [inserted_row]])
+    resp = client.post("/reports/teams/France")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["team_name"] == "France"
+    assert "defensively organized" in body["report_text"]
+    assert "France played 34 matches" in captured["summary"]
+    assert captured["recent_matches"] == TEAM_MATCH_ROWS
+
+
+def test_generate_team_report_returns_503_when_generation_fails(make_client, monkeypatch):
+    def _raise(_summary, _recent_matches):
+        raise RuntimeError("GROQ_API_KEY is not set")
+
+    monkeypatch.setattr(reports_router, "generate_team_report", _raise)
+    client = make_client([[TEAM_PROFILE_ROW], TEAM_MATCH_ROWS])
+    resp = client.post("/reports/teams/France")
+    assert resp.status_code == 503

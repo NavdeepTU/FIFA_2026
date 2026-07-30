@@ -71,11 +71,11 @@ data/raw/*.csv
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
 | `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `rate_limit.py` (in-memory limiter shared by `/chat/*` and `/reports/*`), `routers/` (`analytics.py`, `predict.py`, `chat.py`, `reports.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
-| `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (player + team summary text builders, shared fastembed wrapper), `generate_embeddings.py` / `generate_team_embeddings.py` (populate `player_embeddings` / `team_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
+| `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (player + team summary text builders, shared fastembed wrapper), `generate_embeddings.py` / `generate_team_embeddings.py` (populate `player_embeddings` / `team_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()` / `generate_player_report()` / `generate_team_report()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
 | `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`, `/predict`, `/chat`. |
-| `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`, `ScoutingReport` (player profile page). |
+| `frontend/src/components/` | Shared UI: `DataTable`, `StatTile`, `BarChartCard`, `Nav`, `MetricSelect`, `ScoutingReport` (`kind: "player" \| "team"`, used on both profile pages). |
 | `frontend/src/lib/api.ts` | Typed fetch client for the backend API. |
 | `infra/` | Terraform: `main.tf` (resource group), `postgres.tf`, `storage.tf`, `keyvault.tf`, `container_apps.tf`, `budget.tf`. |
 | `.github/workflows/` | CI/CD (Phase 4). |
@@ -217,23 +217,32 @@ Returns `429` with a `Retry-After` header once tripped; verified live. Tests res
 limiter's state between runs via an autouse fixture (`conftest.py`) so they don't
 trip each other's limits.
 
-**Auto-generated, cached scouting reports built**: `POST /reports/players/{id}`
-(`backend/app/routers/reports.py`) calls `generate_player_report()`
-(`backend/genai/llm.py`) with the player's `build_summary_text()` season summary
-(reused as-is from the embeddings pipeline — no duplicated stats-formatting logic)
-plus their 5 most recent matches, and caches the result in a new `player_reports`
-table. `GET /reports/players/{id}` serves the cached version, 404 if none exists yet —
-repeat views cost nothing. `generate_answer()` and `generate_player_report()` now
+**Auto-generated, cached scouting reports built — player and team**: `POST
+/reports/players/{id}` (`backend/app/routers/reports.py`) calls
+`generate_player_report()` (`backend/genai/llm.py`) with the player's
+`build_summary_text()` season summary (reused as-is from the embeddings pipeline — no
+duplicated stats-formatting logic) plus their 5 most recent matches, and caches the
+result in a new `player_reports` table. `POST /reports/teams/{team}` mirrors this
+exactly for teams (`build_team_summary_text()`, `generate_team_report()`,
+`team_reports` table) — recent matches for a team come from a `case when team_a =
+:team ...` query over `matches`, since that table has no single "this side's
+perspective" column the way `player_match_stats` does for players. `GET` on either
+serves the cached version, 404 if none exists yet — repeat views cost nothing.
+`generate_answer()`, `generate_player_report()`, and `generate_team_report()` all
 share a `_complete()` helper in `llm.py` for the actual Groq call + token-usage
-logging, so both generation paths log consistently. Shares the chat rate limiter
-(same cost-protection budget across every Groq-calling endpoint). Frontend:
-`ScoutingReport.tsx`, a client component embedded on the player profile page —
-"Generate report" when none exists, "Regenerate" once one does. Verified live,
-end-to-end, two players (fresh generation + pre-cached load).
+logging, so every generation path logs consistently; each still has its own system
+prompt (player vs. team framing). Both share the chat rate limiter (same
+cost-protection budget across every Groq-calling endpoint). Frontend:
+`ScoutingReport.tsx`, a client component taking `kind: "player" | "team"` + `id` (it
+only ever renders `report_text`/`generated_at`, so generalizing from the player-only
+version needed no new logic, just picking which `lib/api.ts` fetch/generate functions
+to call), embedded on both the player and team profile pages. Verified live,
+end-to-end: two players and one team (fresh generation + pre-cached load each),
+player page re-verified for regressions after the shared-component refactor.
 
-**Not yet built**: NL→chart, auto-generated match recaps (the team/match-level
-counterpart to player scouting reports — same pattern, not yet applied to
-teams/matches).
+**Not yet built**: NL→chart, auto-generated match recaps (the one remaining "reports"
+item — match-level rather than player/team-level; would need a per-match cache key
+and likely a frontend matches page, which doesn't exist yet).
 
 ## 5. Tech stack & why
 

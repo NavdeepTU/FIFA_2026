@@ -166,6 +166,24 @@ export async function getPlayerReport(playerId: string): Promise<ScoutingReport 
 export const generatePlayerReport = (playerId: string) =>
   apiPost<ScoutingReport>(`/reports/players/${playerId}`, {});
 
+export type TeamScoutingReport = {
+  team_name: string;
+  report_text: string;
+  generated_at: string;
+};
+
+export async function getTeamReport(teamName: string): Promise<TeamScoutingReport | null> {
+  const res = await fetch(`${API_BASE_URL}/reports/teams/${encodeURIComponent(teamName)}`, {
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API /reports/teams/${teamName} failed: ${res.status}`);
+  return res.json() as Promise<TeamScoutingReport>;
+}
+
+export const generateTeamReport = (teamName: string) =>
+  apiPost<TeamScoutingReport>(`/reports/teams/${encodeURIComponent(teamName)}`, {});
+
 export const getMatches = (stage?: string, team?: string) => {
   const params = new URLSearchParams();
   if (stage) params.set("stage", stage);

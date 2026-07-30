@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DataTable } from "@/components/DataTable";
+import { ScoutingReport } from "@/components/ScoutingReport";
 import { StatTile } from "@/components/StatTile";
 import { getTeamProfile } from "@/lib/api";
 
@@ -32,6 +33,8 @@ export default async function TeamProfilePage({
         <StatTile label="Goals for" value={standing.goals_for} />
         <StatTile label="Goal difference" value={standing.goal_difference} />
       </section>
+
+      <ScoutingReport kind="team" id={standing.team} />
 
       <section className="flex flex-col gap-3">
         <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
