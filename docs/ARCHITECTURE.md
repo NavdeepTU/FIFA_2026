@@ -372,7 +372,14 @@ you edit a stat line, verified end-to-end against the real trained model.
   (a redundant `setLoading(true)` inside a `useEffect`, when `loading` already
   defaults to `true`). Fixed by adding `key={id}` where the component is used, so a
   changed entity remounts it fresh (React's documented pattern for this) instead of
-  needing the effect to manually reset state.
+  needing the effect to manually reset state. The first real push then caught a
+  second issue only CI itself could surface: `make install`/`make lint`/`make test`
+  all passed, but the job still failed, because `setup-python`'s automatic post-job
+  step tries to save a pip cache and `make install` runs `pip install --no-cache-dir`
+  (kept deliberately) — so there was nothing to save. Fixed by dropping `cache: pip`
+  from the workflow rather than changing the install step; a concrete example of a
+  class of failure ("green locally, red in CI") that's specific to steps CI runs but
+  local development never touches.
 
 **Still Phase 4**: building/pushing a real Docker image for the API on merge (needs a
 container registry + OIDC federated credentials, neither set up yet) and `terraform

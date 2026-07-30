@@ -12,15 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No `cache: pip` here -- `make install` runs pip with --no-cache-dir (kept
+      # deliberately, see Makefile), so pip's cache dir is never populated and
+      # setup-python's post-job step failed trying to save an empty/missing cache
+      # the first time this workflow ran. Nothing to cache given how install works.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-          cache: pip
-          cache-dependency-path: |
-            etl/requirements.txt
-            backend/requirements-dev.txt
-            backend/ml/requirements.txt
-            backend/genai/requirements.txt
 
       # Same target `make install` uses locally -- one source of truth for what
       # "installed" means, so CI can't silently drift from a developer's own setup.

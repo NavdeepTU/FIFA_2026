@@ -195,9 +195,16 @@ it should always reflect what's actually working right now, not what's planned (
   building/pushing Docker images and `terraform apply` on merge need a container
   registry and OIDC federated credentials, neither of which exist yet; that's a
   separate, larger piece of Phase 4, not done here.
-- Not yet verified with a real run on GitHub (only local `make lint`/`make test` and
-  `npm run lint`/`npm run build`, which the workflow's steps are copied from) — that
-  needs an actual push, which happens through the normal end-of-session commit flow.
+- **Verified with a real run on GitHub** — and it caught something local runs never
+  would: the first push reported the backend job as failed even though `make install`,
+  `make lint`, and `make test` all individually succeeded. The actual failure was in
+  `setup-python`'s own automatic post-job step, which tries to save a pip cache — but
+  `make install` runs `pip install --no-cache-dir` (a deliberate, disk-conscious
+  choice worth keeping), so pip's cache directory is never populated and there was
+  nothing for that step to save. Fixed by dropping the `cache: pip` option from the
+  workflow entirely rather than changing how `make install` works — a genuine example
+  of "passes every local check, still red in CI," specifically because CI exercises a
+  step (cache save/restore) that local development never touches at all.
 
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
