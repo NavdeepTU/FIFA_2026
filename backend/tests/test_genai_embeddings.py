@@ -1,9 +1,10 @@
-"""Unit tests for the pure summary-text builder -- no model loading, no DB, so these
+"""Unit tests for the pure summary-text builders -- no model loading, no DB, so these
 stay fast. Embedding generation itself (fastembed call, DB upsert) is exercised by
-actually running `backend/genai/generate_embeddings.py` against a real Postgres, not
-here -- see docs/project_status.md.
+actually running `backend/genai/generate_embeddings.py` /
+`generate_team_embeddings.py` against a real Postgres, not here -- see
+docs/project_status.md.
 """
-from genai.embeddings import build_summary_text
+from genai.embeddings import build_summary_text, build_team_summary_text
 
 OUTFIELD_ROW = {
     "player_name": "Kylian Mbappe",
@@ -65,3 +66,45 @@ def test_build_summary_text_handles_missing_values_as_zero():
     assert "0 goals" in summary
     assert "xG 0.0" in summary
     assert "rating 0.00" in summary
+
+
+TEAM_ROW = {
+    "team": "Brazil",
+    "matches_played": 45,
+    "wins": 22,
+    "draws": 11,
+    "losses": 12,
+    "goals_for": 77,
+    "goals_against": 55,
+    "points": 77,
+    "tackles": 310,
+    "interceptions": 210,
+    "clearances": 180,
+    "saves": 90,
+    "clean_sheets": 12,
+    "yellow_cards": 40,
+    "red_cards": 3,
+    "avg_pass_accuracy": 81.2,
+    "avg_player_rating": 6.9,
+}
+
+
+def test_build_team_summary_text_includes_record_and_defensive_stats():
+    summary = build_team_summary_text(TEAM_ROW)
+    assert "Brazil" in summary
+    assert "22 wins" in summary
+    assert "11 draws" in summary
+    assert "12 losses" in summary
+    assert "77 points" in summary
+    assert "77 goals" in summary
+    assert "conceded 55" in summary
+    assert "310 tackles" in summary
+    assert "12 clean sheets" in summary
+
+
+def test_build_team_summary_text_handles_missing_values_as_zero():
+    sparse_row = {**TEAM_ROW, "wins": None, "avg_pass_accuracy": None, "avg_player_rating": None}
+    summary = build_team_summary_text(sparse_row)
+    assert "0 wins" in summary
+    assert "0%" in summary
+    assert "rating of 0.00" in summary

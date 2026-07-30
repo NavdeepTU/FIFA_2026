@@ -66,5 +66,42 @@ def build_summary_text(row: dict) -> str:
     return " ".join(sentences)
 
 
+def build_team_summary_text(row: dict) -> str:
+    """Turns one team row (mv_team_standings joined with mv_team_tournament_stats) into
+    a natural-language summary for embedding -- the team-level counterpart to
+    build_summary_text(), covering both results (wins/draws/losses/points) and
+    box-score aggregates (tackles, saves, clean sheets) so questions about a team's
+    defense or discipline have something concrete to retrieve, not just goals for/against.
+    """
+    matches = row["matches_played"] or 0
+    wins = row["wins"] or 0
+    draws = row["draws"] or 0
+    losses = row["losses"] or 0
+    goals_for = row["goals_for"] or 0
+    goals_against = row["goals_against"] or 0
+    points = row["points"] or 0
+    tackles = row["tackles"] or 0
+    interceptions = row["interceptions"] or 0
+    clearances = row["clearances"] or 0
+    saves = row["saves"] or 0
+    clean_sheets = row["clean_sheets"] or 0
+    yellow_cards = row["yellow_cards"] or 0
+    red_cards = row["red_cards"] or 0
+    pass_accuracy = float(row["avg_pass_accuracy"] or 0)
+    avg_rating = float(row["avg_player_rating"] or 0)
+
+    sentences = [
+        f"{row['team']} played {matches} matches, with a record of {wins} wins, {draws} draws, "
+        f"and {losses} losses ({points} points).",
+        f"They scored {goals_for} goals and conceded {goals_against}.",
+        f"Defensively the squad made {tackles} tackles, {interceptions} interceptions, and "
+        f"{clearances} clearances, with {saves} goalkeeper saves and {clean_sheets} clean sheets.",
+        f"Passing accuracy averaged {pass_accuracy:.0f}% across the squad, with an average player "
+        f"rating of {avg_rating:.2f}.",
+        f"Discipline: {yellow_cards} yellow card(s) and {red_cards} red card(s).",
+    ]
+    return " ".join(sentences)
+
+
 def to_pgvector_literal(vector: Iterable[float]) -> str:
     return "[" + ",".join(f"{v:.6f}" for v in vector) + "]"

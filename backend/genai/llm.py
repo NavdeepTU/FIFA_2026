@@ -18,10 +18,10 @@ GENERATION_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (
     "You are a football analytics assistant answering questions about a FIFA World Cup "
-    "2026 player-performance dataset. Answer ONLY using the player summaries given in the "
-    "context below -- do not use outside knowledge about real players or tournaments. "
-    "Cite specific numbers from the context when relevant. If the context doesn't contain "
-    "enough information to answer, say so plainly rather than guessing."
+    "2026 player-performance dataset. Answer ONLY using the player and team summaries given "
+    "in the context below -- do not use outside knowledge about real players, teams, or "
+    "tournaments. Cite specific numbers from the context when relevant. If the context "
+    "doesn't contain enough information to answer, say so plainly rather than guessing."
 )
 
 _client = None
@@ -39,7 +39,9 @@ def _get_groq_client():
 
 
 def generate_answer(question: str, context: list[str]) -> str:
-    context_block = "\n\n".join(f"- {c}" for c in context) if context else "(no matching players found)"
+    context_block = (
+        "\n\n".join(f"- {c}" for c in context) if context else "(no matching players or teams found)"
+    )
     client = _get_groq_client()
 
     start = time.perf_counter()

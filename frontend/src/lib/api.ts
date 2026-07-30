@@ -132,10 +132,11 @@ export const predictRating = (input: RatingPredictionInput) =>
   apiPost<{ predicted_rating: number }>("/predict/rating", input);
 
 export type ChatSource = {
-  player_id: string;
-  player_name: string;
+  entity_type: "player" | "team";
+  entity_id: string;
+  name: string;
   team: string;
-  position: string;
+  position: string | null;
   summary_text: string;
   distance: number;
 };

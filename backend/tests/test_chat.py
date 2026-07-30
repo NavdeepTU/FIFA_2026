@@ -5,6 +5,26 @@ load the real fastembed model, matching how /predict tests mock model artifacts
 from app.rate_limit import MAX_REQUESTS_PER_WINDOW
 from app.routers import chat as chat_router
 
+PLAYER_ROW = {
+    "entity_type": "player",
+    "entity_id": "P00001",
+    "name": "Test Keeper",
+    "team": "France",
+    "position": "Goalkeeper",
+    "summary_text": "Test Keeper is a Goalkeeper for France.",
+    "distance": 0.42,
+}
+
+TEAM_ROW = {
+    "entity_type": "team",
+    "entity_id": "Brazil",
+    "name": "Brazil",
+    "team": "Brazil",
+    "position": None,
+    "summary_text": "Brazil played 45 matches, with a record of 22 wins, 11 draws, and 12 losses.",
+    "distance": 0.51,
+}
+
 
 def test_status():
     from app.main import app
@@ -18,22 +38,24 @@ def test_status():
     assert body["rate_limit"]["requests_per_window"] == MAX_REQUESTS_PER_WINDOW
 
 
-def test_retrieve_embeds_query_and_returns_nearest_players(make_client, monkeypatch):
+def test_retrieve_embeds_query_and_returns_nearest_entities(make_client, monkeypatch):
     monkeypatch.setattr(chat_router, "embed_texts", lambda texts: [[0.1] * 384])
-    rows = [
-        {
-            "player_id": "P00001",
-            "player_name": "Test Keeper",
-            "team": "France",
-            "position": "Goalkeeper",
-            "summary_text": "Test Keeper is a Goalkeeper for France.",
-            "distance": 0.42,
-        }
-    ]
+    rows = [PLAYER_ROW]
     client = make_client([rows])
     resp = client.post("/chat/retrieve", json={"query": "best goalkeeper", "top_k": 5})
     assert resp.status_code == 200
     assert resp.json() == rows
+
+
+def test_retrieve_can_return_a_mix_of_players_and_teams(make_client, monkeypatch):
+    monkeypatch.setattr(chat_router, "embed_texts", lambda texts: [[0.1] * 384])
+    rows = [PLAYER_ROW, TEAM_ROW]
+    client = make_client([rows])
+    resp = client.post("/chat/retrieve", json={"query": "who defends well?", "top_k": 5})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert [r["entity_type"] for r in body] == ["player", "team"]
+    assert body[1]["position"] is None
 
 
 def test_retrieve_rejects_empty_query(client):
@@ -66,16 +88,7 @@ def test_ask_retrieves_then_generates_grounded_answer(make_client, monkeypatch):
         return "Test Keeper made the most saves."
 
     monkeypatch.setattr(chat_router, "generate_answer", fake_generate_answer)
-    rows = [
-        {
-            "player_id": "P00001",
-            "player_name": "Test Keeper",
-            "team": "France",
-            "position": "Goalkeeper",
-            "summary_text": "Test Keeper is a Goalkeeper for France.",
-            "distance": 0.42,
-        }
-    ]
+    rows = [PLAYER_ROW]
     client = make_client([rows])
     resp = client.post("/chat/ask", json={"query": "who made the most saves?", "top_k": 5})
     assert resp.status_code == 200
@@ -93,16 +106,7 @@ def test_ask_returns_503_when_generation_fails(make_client, monkeypatch):
         raise RuntimeError("GROQ_API_KEY is not set")
 
     monkeypatch.setattr(chat_router, "generate_answer", _raise)
-    rows = [
-        {
-            "player_id": "P00001",
-            "player_name": "Test Keeper",
-            "team": "France",
-            "position": "Goalkeeper",
-            "summary_text": "Test Keeper is a Goalkeeper for France.",
-            "distance": 0.42,
-        }
-    ]
+    rows = [PLAYER_ROW]
     client = make_client([rows])
     resp = client.post("/chat/ask", json={"query": "who made the most saves?"})
     assert resp.status_code == 503

@@ -168,12 +168,12 @@ function ChatBubble({ message }: { message: Message }) {
         <div className="flex flex-wrap gap-1.5">
           {message.sources.map((s) => (
             <span
-              key={s.player_id}
+              key={s.entity_id}
               className="text-xs rounded-full px-2.5 py-1"
               style={{ background: "var(--background)", border: "1px solid var(--border-hairline)", color: "var(--text-muted)" }}
               title={s.summary_text}
             >
-              {s.player_name} · {s.team} · {s.position}
+              {s.entity_type === "team" ? `${s.name} · Team` : `${s.name} · ${s.team} · ${s.position}`}
             </span>
           ))}
         </div>

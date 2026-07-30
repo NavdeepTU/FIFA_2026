@@ -71,7 +71,7 @@ data/raw/*.csv
 | `etl/` | `transform.py` (pure pandas, no I/O — testable), `load.py` (Postgres load, idempotent), `schema.sql` (DDL + materialized views). |
 | `backend/app/` | FastAPI app: `main.py` (app wiring), `config.py` (env-based settings), `db.py` (SQLAlchemy engine), `rate_limit.py` (in-memory limiter for `/chat/*`), `routers/` (`analytics.py`, `predict.py`, `chat.py`). |
 | `backend/ml/` | Offline training scripts + saved model artifacts (Phase 2). |
-| `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (summary text + fastembed wrapper), `generate_embeddings.py` (populates `player_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
+| `backend/genai/` | RAG layer (Phase 3): `embeddings.py` (player + team summary text builders, shared fastembed wrapper), `generate_embeddings.py` / `generate_team_embeddings.py` (populate `player_embeddings` / `team_embeddings`, offline), `llm.py` (provider-agnostic `generate_answer()`, Groq today). |
 | `backend/tests/` | pytest suite for the API. |
 | `etl/tests/` | pytest suite for the transform logic. |
 | `frontend/src/app/` | Next.js pages (App Router): `/`, `/players`, `/players/[id]`, `/teams`, `/teams/[team]`, `/predict`, `/chat`. |
@@ -93,14 +93,25 @@ data/raw/*.csv
    produces identical rows (idempotency matters for the load step).
 2. `load.py` applies `schema.sql`, truncates tables in reverse FK order, loads them in
    forward FK order (`teams → players/matches → player_match_stats`), then refreshes the
-   three materialized views. Safe to re-run end-to-end at any time.
+   materialized views (`mv_player_tournament_stats`, `mv_team_standings`,
+   `mv_team_tournament_stats`, `mv_tournament_progression`). Safe to re-run end-to-end
+   at any time.
 3. **Why compute our own aggregates instead of using the CSV's tournament columns**:
    the source's `total_goals_tournament` / `tournament_rating` etc. don't behave as true
    cumulative running totals (checked directly against the data — a player's
    `total_minutes_tournament` fluctuates non-monotonically across their match rows).
-   The materialized views (`mv_player_tournament_stats`, `mv_team_standings`,
-   `mv_tournament_progression`) instead `SUM`/`AVG` the granular per-match stats, which
-   are internally consistent.
+   The materialized views instead `SUM`/`AVG` the granular per-match stats, which are
+   internally consistent.
+4. **Re-running the ETL wipes `player_embeddings` and `team_embeddings`, every time,
+   not just on a first run**: `load_tables()`'s `truncate table ... cascade` cascades
+   into *any* table with a foreign key into `players`/`teams` — that includes both
+   embedding tables (`player_embeddings.player_id`, `team_embeddings.team_name` are
+   FKs), not just the four tables the ETL directly manages. `load.py` prints an
+   explicit reminder at the end of every run to regenerate them
+   (`make genai-embed && make genai-embed-teams`) rather than leaving this silent.
+   Preserving embeddings across an ETL rerun would need a different reload strategy
+   (diff/upsert instead of truncate+reload) — not done, since truncate+reload's
+   simplicity is what makes the ETL trivially idempotent in the first place.
 
 ### 4.2 Backend (`backend/`)
 
@@ -148,20 +159,33 @@ RAG over `player_embeddings` (pgvector column added in `schema.sql`), Groq for
 generation, a constrained NL→query-spec translator (never raw LLM-generated SQL — see
 the plan file's Phase 3 notes for the injection/cost-blowup reasoning).
 
-**Embeddings built**: `backend/genai/generate_embeddings.py` populates
-`player_embeddings` from `mv_player_tournament_stats` — one natural-language summary
-per player, embedded locally via `fastembed` (`BAAI/bge-small-en-v1.5`, ONNX, 384-dim).
-Local rather than a hosted API deliberately: Groq has no embeddings endpoint, and this
-avoids a second API key/cost just for retrieval — the interface (`embed_texts()`) is
-still small enough to swap later if needed. Idempotent, re-run via `make genai-embed`
-after every ETL load.
+**Embeddings built — player and team**: `backend/genai/generate_embeddings.py`
+populates `player_embeddings` from `mv_player_tournament_stats`; the newer
+`generate_team_embeddings.py` populates `team_embeddings` the same way, from
+`mv_team_standings` (W/D/L/points) joined with `mv_team_tournament_stats` (a new
+materialized view — box-score aggregates by team: tackles, interceptions, clearances,
+saves, clean sheets, summed/averaged from `player_match_stats`, `schema.sql`). Team
+embeddings exist specifically so retrieval isn't player-only — a question like "which
+team has the best defense" needs a team-shaped summary to match against, not just
+goals for/against. Both embedded locally via `fastembed` (`BAAI/bge-small-en-v1.5`,
+ONNX, 384-dim). Local rather than a hosted API deliberately: Groq has no embeddings
+endpoint, and this avoids a second API key/cost just for retrieval — the interface
+(`embed_texts()`) is shared and still small enough to swap later if needed. Both
+idempotent, re-run via `make genai-embed` / `make genai-embed-teams` after every ETL
+load.
 
-**Retrieval built**: `POST /chat/retrieve` (`backend/app/routers/chat.py`) embeds an
-incoming query with the same `embed_texts()` used to build the embeddings, then does a
-pgvector `<->` distance search joined against `players` for the nearest summaries.
-Using the same embedding model for queries and documents isn't a style choice — vector
-similarity is only meaningful if both sides came from the same model. This makes
-`fastembed` a serving-time dependency of the API now, not just an offline-script one
+**Retrieval built — unified across both**: `POST /chat/retrieve`
+(`backend/app/routers/chat.py`, `_retrieve_similar_entities`) embeds an incoming query
+with the same `embed_texts()` used to build the embeddings, then does a single pgvector
+`<->` distance search that's a `union all` over `player_embeddings` (joined against
+`players`) and `team_embeddings`, ranked together and cut off at `top_k`. Deliberately
+one ranked list rather than separate player/team result buckets: similarity alone
+decides what's relevant, so a team-shaped query naturally surfaces only teams, a
+player-shaped one only players, and a genuinely mixed query ("tell me about France, the
+team and their players") surfaces both — verified live, all three cases. Using the same
+embedding model for queries and documents isn't a style choice — vector similarity is
+only meaningful if both sides came from the same model. This makes `fastembed` a
+serving-time dependency of the API now, not just an offline-script one
 (`backend/requirements.txt`).
 
 **Generation built**: `POST /chat/ask` runs the same retrieval, then calls
@@ -188,9 +212,7 @@ store (Redis) instead. Returns `429` with a `Retry-After` header once tripped; v
 live. Tests reset the limiter's state between runs via an autouse fixture
 (`conftest.py`) so they don't trip each other's limits.
 
-**Not yet built**: NL→chart, auto-generated/cached reports, and team-level embeddings
-(`player_embeddings` is player-only per `schema.sql` — there's no `team_embeddings`
-table, so team-level questions have nothing to retrieve against yet).
+**Not yet built**: NL→chart, auto-generated/cached reports.
 
 ## 5. Tech stack & why
 

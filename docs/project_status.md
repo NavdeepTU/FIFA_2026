@@ -31,7 +31,7 @@ it should always reflect what's actually working right now, not what's planned (
   `/health/ready` (checks Postgres connectivity). Groq calls additionally log
   model/prompt/completion/total token counts and latency per request (`app.genai`
   logger) — the raw material for a future token-usage dashboard.
-- 24 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
+- 28 pytest tests (`backend/tests/`), DB and model layers mocked — unit tests, not
   integration tests against a real Postgres (that's a Phase 4/CI concern).
 - ruff-clean (`pyproject.toml` at repo root, `make lint`).
 
@@ -74,16 +74,34 @@ it should always reflect what's actually working right now, not what's planned (
   query for "a goalkeeper who makes a lot of saves and keeps clean sheets" returned
   only goalkeepers as nearest neighbors, confirming the embeddings are semantically
   meaningful and not just populated.
+- **Team embeddings** (extends the above): `backend/genai/generate_team_embeddings.py`
+  populates a new `team_embeddings` table the same way, from a new
+  `mv_team_tournament_stats` materialized view (box-score aggregates by team — tackles,
+  interceptions, clearances, saves, clean sheets — joined with the existing
+  `mv_team_standings` for W/D/L/points) via `build_team_summary_text()`. Closes a gap
+  that existed since Phase 3 first shipped: `player_embeddings` was player-only, so a
+  question like "which team had the best defense?" had nothing to retrieve against.
+  Idempotent, re-run via `make genai-embed-teams` after every ETL load. Verified: all
+  48 teams embedded; asking "which team has the best defense based on tackles and
+  clean sheets?" returned only team results (Canada correctly ranked first on both
+  metrics — 1014 tackles, 15 clean sheets), and a deliberately mixed query ("tell me
+  about France, the team and their players") returned a genuine mix of one team result
+  and several player results — confirming retrieval ranks by similarity across both
+  entity types in one list rather than needing separate buckets or manual routing.
 - **Retrieval**: `POST /chat/retrieve` embeds an incoming natural-language query with
-  the same model and returns the nearest player summaries (`app/routers/chat.py`).
-  `fastembed` is now a serving-time dependency, not just an offline-script one — added
-  to `backend/requirements.txt` accordingly.
+  the same model and returns the nearest player **and team** summaries together, one
+  ranked list (`app/routers/chat.py`, `_retrieve_similar_entities` — a `union all`
+  over both embedding tables). `fastembed` is now a serving-time dependency, not just
+  an offline-script one — added to `backend/requirements.txt` accordingly. Response
+  shape changed to `entity_type`/`entity_id`/`name`/`team`/`position` (nullable for
+  teams) to represent both kinds of result — frontend (`lib/api.ts`, `/chat` page)
+  updated to match, chip rendering shows "· Team" for team sources.
 - **Generation**: `POST /chat/ask` retrieves via the same path, then calls Groq
   (`llama-3.3-70b-versatile`) with a system prompt constraining it to answer only from
-  the retrieved player summaries (`backend/genai/llm.py`, `generate_answer()`) — not
-  free-form guessing. Built behind a provider-agnostic function signature so swapping
-  providers later means writing one new function, not touching the router. Token usage
-  and latency logged per call. Requires `GROQ_API_KEY` in `backend/.env`
+  the retrieved player/team summaries (`backend/genai/llm.py`, `generate_answer()`) —
+  not free-form guessing. Built behind a provider-agnostic function signature so
+  swapping providers later means writing one new function, not touching the router.
+  Token usage and latency logged per call. Requires `GROQ_API_KEY` in `backend/.env`
   (`/chat/status` reports whether it's set); without it, `/ask` returns 503 rather than
   failing opaquely.
 - **Rate limiting**: `backend/app/rate_limit.py` — a small hand-rolled, in-memory,
@@ -96,10 +114,11 @@ it should always reflect what's actually working right now, not what's planned (
   Returns `429` with a `Retry-After` header once the limit is hit. `/chat/status` now
   reports the configured limit. Verified live: the 21st request within a minute got
   `429` with `retry-after: 50`, requests 1-20 all succeeded.
-- Unit-tested: `backend/tests/test_genai_embeddings.py` (pure summary-text builder),
-  `backend/tests/test_chat.py` (retrieval, generation, and rate limiting — all with the
-  Groq/embedding calls mocked; the rate limiter's state is reset between tests via an
-  autouse fixture in `conftest.py` so tests don't trip each other's limits).
+- Unit-tested: `backend/tests/test_genai_embeddings.py` (pure summary-text builders,
+  player and team), `backend/tests/test_chat.py` (retrieval — including a mixed
+  player+team result set, generation, and rate limiting — all with the Groq/embedding
+  calls mocked; the rate limiter's state is reset between tests via an autouse fixture
+  in `conftest.py` so tests don't trip each other's limits).
 - **While building the embeddings step earlier**, found and fixed a pre-existing bug in
   `etl/load.py`'s `apply_schema()`: naive `;`-splitting treated the comment block
   immediately before `create table player_embeddings` as making the whole statement
@@ -160,6 +179,22 @@ it should always reflect what's actually working right now, not what's planned (
   knowing this can happen on a single-row-per-round-trip upsert to a database that's
   geographically distant from the client, and that checking `pg_stat_activity` is the
   fast way to tell "stalled" from "just slow" server-side.
+- **Team-embeddings schema pushed to the deployed database too**: re-ran `etl/load.py`
+  against Azure (adds `team_embeddings` + `mv_team_tournament_stats`), then both
+  `generate_embeddings.py` and `generate_team_embeddings.py`. Verified: 48 teams, 1248
+  players, 1050 matches, 54600 stat rows, 1248 player embeddings, 48 team embeddings —
+  all present on the real deployed Postgres. **Found a real bug in the process**:
+  re-running `etl/load.py` had silently wiped `player_embeddings` back to 0 (confirmed
+  before regenerating) — `load_tables()`'s `truncate table ... cascade` cascades into
+  *any* table with a foreign key into `players`/`teams`, which includes both embeddings
+  tables, not just the four tables the ETL manages directly. This means **every** ETL
+  re-run wipes both embeddings tables, not just the very first one — previously
+  undocumented. Fixed by making it visible rather than silent: `load.py` now prints an
+  explicit reminder at the end of every run to regenerate embeddings, and
+  `load_tables()` has a comment explaining why. The underlying behavior (cascade wipes
+  embeddings) is unchanged — this is a workflow-visibility fix, not a schema redesign;
+  a `make etl-run` that preserves embeddings across reruns would need a different reload
+  strategy (diff/upsert instead of truncate) and wasn't in scope tonight.
 
 ### Docs / process
 - `docs/ARCHITECTURE.md` — living system reference.
@@ -170,12 +205,11 @@ it should always reflect what's actually working right now, not what's planned (
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: embeddings, retrieval, grounded generation, rate limiting, and a
-  frontend chat UI are all built (see above) — the core RAG feature works end-to-end,
-  backend and frontend, with a real usage safety net. Still unbuilt: natural-language →
-  chart, auto-generated/cached reports, and team-level summaries (`player_embeddings`
-  is player-only; a question like "which team had the best defense?" has no team
-  embeddings to retrieve against yet).
+- **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
+  rate limiting, and a frontend chat UI are all built (see above) — the core RAG
+  feature works end-to-end, backend and frontend, answers both player- and team-level
+  questions, with a real usage safety net. Still unbuilt: natural-language → chart,
+  auto-generated/cached reports.
 - **Phase 4 (observability/CI/CD)**: GitHub Actions workflows, building/pushing a real
   Docker image for the API (Container App currently runs a placeholder hello-world
   image — the database behind it is populated and ready, but nothing is actually

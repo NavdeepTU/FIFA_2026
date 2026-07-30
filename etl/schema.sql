@@ -108,6 +108,15 @@ create table if not exists player_embeddings (
     updated_at timestamptz default now()
 );
 
+-- Same idea as player_embeddings, one row per team -- lets /chat answer team-level
+-- questions ("which team had the best defense?") instead of only player ones.
+create table if not exists team_embeddings (
+    team_name text primary key references teams(team_name),
+    summary_text text not null,
+    embedding vector(384),
+    updated_at timestamptz default now()
+);
+
 -- ==== Materialized aggregate views (Phase 1 analytics) ====
 
 drop materialized view if exists mv_player_tournament_stats;
@@ -162,6 +171,31 @@ from team_matches
 group by team;
 
 create unique index if not exists idx_mv_team_standings on mv_team_standings(team);
+
+-- Box-score aggregates by team (as opposed to mv_team_standings' W/D/L/points from
+-- match results) -- gives team summaries real defensive/offensive numbers (tackles,
+-- saves, clean sheets) instead of just goals for/against.
+drop materialized view if exists mv_team_tournament_stats;
+create materialized view mv_team_tournament_stats as
+select
+    team,
+    count(distinct match_id) as matches_played,
+    sum(goals) as goals,
+    sum(assists) as assists,
+    sum(shots) as shots,
+    sum(tackles) as tackles,
+    sum(interceptions) as interceptions,
+    sum(clearances) as clearances,
+    sum(saves) as saves,
+    sum(case when clean_sheet then 1 else 0 end) as clean_sheets,
+    sum(yellow_cards) as yellow_cards,
+    sum(red_cards) as red_cards,
+    avg(pass_accuracy) as avg_pass_accuracy,
+    avg(player_rating) as avg_player_rating
+from player_match_stats
+group by team;
+
+create unique index if not exists idx_mv_team_tournament_stats on mv_team_tournament_stats(team);
 
 drop materialized view if exists mv_tournament_progression;
 create materialized view mv_tournament_progression as

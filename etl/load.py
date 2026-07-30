@@ -24,6 +24,7 @@ TABLE_ORDER = ["teams", "players", "matches", "player_match_stats"]
 MATERIALIZED_VIEWS = [
     "mv_player_tournament_stats",
     "mv_team_standings",
+    "mv_team_tournament_stats",
     "mv_tournament_progression",
 ]
 
@@ -60,7 +61,10 @@ def apply_schema(engine) -> None:
 
 def load_tables(engine, tables: dict[str, pd.DataFrame]) -> None:
     with engine.begin() as conn:
-        # truncate in reverse FK order, then insert in forward order, so re-running is idempotent
+        # truncate in reverse FK order, then insert in forward order, so re-running is idempotent.
+        # CASCADE also empties player_embeddings / team_embeddings (they have FKs into players /
+        # teams) -- unavoidable with plain truncate+reload, so every ETL run wipes them, not just
+        # a first run. That's why main() prints a reminder to regenerate them below.
         for name in reversed(TABLE_ORDER):
             conn.execute(text(f"truncate table {name} cascade"))
         for name in TABLE_ORDER:
@@ -92,6 +96,10 @@ def main() -> None:
     refresh_views(engine)
 
     print("Done.")
+    print(
+        "Note: this truncated (via CASCADE) any existing player_embeddings / team_embeddings "
+        "rows. Run `make genai-embed` and `make genai-embed-teams` to regenerate them."
+    )
 
 
 if __name__ == "__main__":
