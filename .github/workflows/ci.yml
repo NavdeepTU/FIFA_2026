@@ -49,3 +49,39 @@ jobs:
       # `next build` type-checks as part of building, so this covers both.
       - run: npm run build
         working-directory: frontend
+
+  build-push-image:
+    name: Build + push backend image
+    needs: backend
+    # Only on an actual merge to master, not every PR -- a PR from an untrusted fork
+    # wouldn't have this federated credential's trust relationship anyway (it's
+    # scoped to the master branch specifically), and pushing an image per PR would
+    # just churn the registry with untested builds.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # required to request the short-lived OIDC token azure/login exchanges
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # OIDC federated credential (infra/container_registry.tf's
+      # github_actions_sp_object_id + infra/README.md's bootstrap steps) -- no
+      # AZURE_CLIENT_SECRET anywhere. GitHub mints a short-lived OIDC token scoped to
+      # this exact repo+branch, Azure AD trusts it via the federated credential and
+      # exchanges it for an access token, and that token expires with the job. No
+      # long-lived secret to rotate or leak, unlike a classic service-principal
+      # client secret.
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Builds in Azure itself (ACR Tasks) -- same `az acr build` every manual deploy
+      # this project has done so far, so the runner needs no Docker install either.
+      # Tagged with the commit SHA, not `latest` -- an immutable, traceable tag so a
+      # human can tell exactly which commit produced a given image. This job only
+      # builds and pushes; deploying a specific tag to the Container App (via
+      # TF_VAR_api_image + `terraform apply`) is still a deliberate manual step.
+      - run: az acr build --registry acrfifa26dev6q3jm1 --image fifa26-api:${{ github.sha }} --file backend/Dockerfile backend

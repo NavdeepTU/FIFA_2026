@@ -21,6 +21,30 @@ resource "azurerm_role_assignment" "container_apps_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.container_apps.principal_id
 }
 
+variable "github_actions_sp_object_id" {
+  description = <<-EOT
+    Object ID of the service principal behind the "gh-actions-fifa26-deploy" Azure AD
+    app registration used for GitHub Actions OIDC (federated credential, no stored
+    secret). The app registration and federated credential themselves are bootstrapped
+    once via `az ad app create` / `az ad app federated-credential create` -- like the
+    Terraform state storage account in infra/README.md, this is one-time identity
+    setup, not something that changes often enough to justify pulling in the azuread
+    Terraform provider just for it. The RBAC grant below stays in Terraform, though,
+    consistent with every other role assignment in this stack.
+  EOT
+  type        = string
+  default     = "28cbf846-e09a-40df-98b4-55808f17ccc5"
+}
+
+# Least-privilege grant so CI can push new images without being able to pull/delete
+# others' or touch anything else in the resource group -- distinct from the Container
+# App's AcrPull role above, which is read-only in the opposite direction.
+resource "azurerm_role_assignment" "github_actions_acr_push" {
+  scope                = azurerm_container_registry.this.id
+  role_definition_name = "AcrPush"
+  principal_id         = var.github_actions_sp_object_id
+}
+
 output "acr_login_server" {
   value = azurerm_container_registry.this.login_server
 }

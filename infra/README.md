@@ -5,11 +5,19 @@ free-tier eligible), Blob Storage (data lake + static frontend hosting, no CDN),
 Container Apps Environment (API + self-hosted Grafana, consumption plan / always-free grant),
 and a Budget + cost alert.
 
-Terraform itself is **not** installed locally (kept off this machine to save disk space) —
-`terraform init/plan/apply` run either from GitHub Actions, or manually on a machine/Cloud
-Shell that has it, per the plan's cost/storage constraints.
+Local tooling (Azure CLI + Terraform, via `brew`/`hashicorp/tap`) is fine to install now —
+the disk-space constraint that originally kept this Cloud-Shell-only has eased (see root
+`CLAUDE.md`). `terraform init/plan/apply` run from a laptop today; automating them from
+GitHub Actions is still a manual, deliberate step (see "Cost notes" and the CI/CD status
+in `docs/project_status.md`).
 
-## One-time bootstrap (do this via Azure Cloud Shell — no local install needed)
+## One-time bootstrap
+
+These are one-off identity/state setup steps, done via `az cli` rather than Terraform
+itself — deliberately, to avoid a chicken-and-egg problem (Terraform's own remote state
+backend can't exist before *something* creates it) and, for the OIDC piece, to avoid
+pulling in a whole extra Terraform provider (`azuread`) just for a setup that essentially
+never changes once done.
 
 1. `az login` and `az account set --subscription <sub-id>`.
 2. Create a resource group + storage account for Terraform remote state (so your laptop and
@@ -20,8 +28,26 @@ Shell that has it, per the plan's cost/storage constraints.
    az storage container create -n tfstate --account-name fifatfstate<yourunique>
    ```
 3. Uncomment the `backend "azurerm" {}` block in `versions.tf` with those exact names.
-4. Set up a GitHub Actions OIDC federated credential (no long-lived secret) so CI can run
-   `terraform apply` — see `.github/workflows/deploy.yml`.
+4. **GitHub Actions OIDC** (so CI can build/push a Docker image without any stored Azure
+   secret): create an Azure AD app registration + federated credential trusting this
+   repo's `master` branch specifically, one-time:
+   ```
+   az ad app create --display-name "gh-actions-fifa26-deploy"
+   az ad sp create --id <appId from above>
+   az ad app federated-credential create --id <appId> --parameters '{
+     "name": "github-actions-master-branch",
+     "issuer": "https://token.actions.githubusercontent.com",
+     "subject": "repo:<owner>/<repo>:ref:refs/heads/master",
+     "audiences": ["api://AzureADTokenExchange"]
+   }'
+   ```
+   The resulting service principal's object ID (`az ad sp show --id <appId>`) is fed into
+   Terraform as `github_actions_sp_object_id` (`container_registry.tf`), which grants it
+   `AcrPush` on the registry — the only permission it has, least-privilege by design.
+   Finally, add three **GitHub repository secrets** (Settings → Secrets and variables →
+   Actions) so the `build-push-image` job in `.github/workflows/ci.yml` can log in:
+   `AZURE_CLIENT_ID` (the app's `appId`), `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+   No client secret is ever created or stored — the whole point of federated credentials.
 
 ## Running a plan/apply
 
