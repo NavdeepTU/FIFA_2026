@@ -1,0 +1,26 @@
+# Grafana "provisioning" -- config files it reads at startup to configure itself,
+# instead of state saved from clicking around the UI. Required here because the
+# Grafana Container App has no persistent disk (min_replicas = 0, ephemeral
+# filesystem) -- anything set up through the UI would be wiped the next time it
+# scales to zero and back up. This file gets baked into the custom image
+# (infra/grafana/Dockerfile) at /etc/grafana/provisioning/datasources/.
+apiVersion: 1
+
+datasources:
+  - name: Azure Monitor
+    type: grafana-azure-monitor-datasource
+    access: proxy
+    isDefault: true
+    jsonData:
+      # Managed Identity auth -- no client secret, no tenant/client ID stored
+      # anywhere. The identity attached to this Container App (infra/
+      # container_apps.tf's azurerm_user_assigned_identity.grafana) is granted
+      # "Log Analytics Reader" scoped to just the one workspace, the same
+      # credential-free pattern already used for ACR pull and Key Vault access
+      # elsewhere in this stack.
+      azureAuthType: msi
+      # Not a secret -- a subscription ID identifies which Azure subscription to
+      # query, it grants no access on its own (the managed identity's role
+      # assignment does that).
+      subscriptionId: e1c9219c-b619-4508-b9ba-7898eb104d6f
+    version: 1

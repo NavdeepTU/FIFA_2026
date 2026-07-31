@@ -21,6 +21,14 @@ resource "azurerm_role_assignment" "container_apps_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.container_apps.principal_id
 }
 
+# Same grant, separate identity -- Grafana's custom image (infra/grafana/) also lives
+# in this registry now, not just the stock public Docker Hub image it started with.
+resource "azurerm_role_assignment" "grafana_acr_pull" {
+  scope                = azurerm_container_registry.this.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.grafana.principal_id
+}
+
 variable "github_actions_sp_object_id" {
   description = <<-EOT
     Object ID of the service principal behind the "gh-actions-fifa26-deploy" Azure AD

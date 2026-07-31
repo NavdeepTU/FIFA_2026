@@ -32,6 +32,12 @@ variable "postgres_admin_password" {
   sensitive   = true
 }
 
+variable "grafana_admin_password" {
+  description = "Set via TF_VAR_grafana_admin_password (openssl rand, same pattern as postgres_admin_password). Grafana's Container App has no persistent disk, so leaving this at the default admin/admin and 'changing it' via the UI would be silently lost on every scale-to-zero cycle -- setting it via env var/Key Vault is the only setting that actually sticks."
+  type        = string
+  sensitive   = true
+}
+
 variable "groq_api_key" {
   description = "Stored in Key Vault, not in state-visible plain resources where avoidable. Set via TF_VAR_groq_api_key."
   type        = string

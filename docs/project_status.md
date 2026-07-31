@@ -1,10 +1,10 @@
 # Project Status
 
-Last updated: 2026-07-31 (backend image build/push automated via GitHub Actions
-OIDC — verified with a real successful run after four rounds of real, fixed
-failures). Update this file whenever a task completes or scope changes — it should
-always reflect what's actually working right now, not what's planned (that's
-`project_scope.md`).
+Last updated: 2026-07-31 (Grafana's Azure Monitor datasource connected and
+verified via managed identity — checkpoint 1 of the observability dashboarding
+task; dashboard panels are the next checkpoint). Update this file whenever a task
+completes or scope changes — it should always reflect what's actually working
+right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -385,6 +385,67 @@ always reflect what's actually working right now, not what's planned (that's
   relied on the user manually copy-pasting error text out of the browser) — sped up
   the last two fix-verify cycles considerably.
 
+### Observability dashboarding (Phase 4, sixth slice — checkpoint 1 of 2)
+- **Grafana (`ca-fifa26-dev-grafana`, provisioned since the very first Terraform
+  apply) is finally configured**, not just running an untouched stock image. Scope
+  deliberately limited to this checkpoint: get the Azure Monitor datasource
+  genuinely connected and verified against real telemetry. Building actual
+  dashboard panels is the next, separate checkpoint.
+- **Config had to be code, not UI clicks**: the Grafana Container App has
+  `min_replicas = 0` and no persistent disk, so anything configured by clicking
+  around in Grafana's own web UI would be wiped on the next scale-to-zero cycle.
+  Used Grafana's "provisioning" feature instead — `infra/grafana/provisioning/
+  datasources/azure-monitor.yaml` baked into a custom image (`infra/grafana/
+  Dockerfile`, built via `az acr build`, same pattern as the backend image) so the
+  config re-applies from scratch on every container start.
+- **Credential-free auth, same pattern as everywhere else in this stack**: Grafana
+  got its own user-assigned managed identity (`id-fifa26-dev-grafana`, separate
+  from the API's — least-privilege, scoped to only what Grafana needs), granted
+  `Log Analytics Reader` on the workspace and `Key Vault Secrets User` (so the
+  Container Apps platform itself can resolve the admin-password secret reference)
+  and `AcrPull` on the registry. No client secret, no connection string with
+  embedded credentials.
+- **Admin password**: generated (`openssl rand`) and landed in Key Vault, same as
+  every other secret in this project, injected via `GF_SECURITY_ADMIN_PASSWORD`.
+  Deliberately not left at the image's `admin`/`admin` default on a
+  publicly-reachable ingress — and since there's no persistent disk, "changing it"
+  via Grafana's own UI wouldn't have stuck anyway.
+- **Three real, distinct issues found and fixed while verifying, not assumed away**:
+  1. The datasource health check failed with `managed identity authentication is
+     not enabled in Grafana config` — turns out `azureAuthType: msi` in a
+     datasource's own config isn't enough; Grafana gates managed-identity auth
+     behind a separate *server-wide* opt-in (`GF_AZURE_MANAGED_IDENTITY_ENABLED=true`
+     + `GF_AZURE_MANAGED_IDENTITY_CLIENT_ID` for a user-assigned identity), a
+     deliberate security guardrail so a datasource plugin can't silently ride
+     whatever identity happens to be attached without the operator explicitly
+     allowing it. Confirmed the exact config keys from Grafana's own source
+     (`pkg/setting/setting_azure.go`) rather than guessing at env var names.
+  2. A real KQL query against `requests` (the table name used inside Application
+     Insights' own Logs blade) failed with `Failed to resolve table or column
+     expression named 'requests'` — querying the *raw* Log Analytics workspace
+     directly (which is what Grafana's Azure Monitor datasource does) uses the
+     underlying `App*`-prefixed table names (`AppRequests`, `AppTraces`, etc.);
+     `requests`/`traces` are aliases that only exist in the App Insights resource's
+     own query surface, not the workspace itself.
+  3. Fresh traffic generated against the live API to verify real data flowing
+     through took noticeably longer to become queryable than expected — cross-
+     checked directly against `az monitor app-insights query` (the same tool used
+     successfully in earlier sessions) and got the identical `0` result at the same
+     moment, confirming this was genuine Azure-side Log Analytics ingestion lag
+     affecting *both* query surfaces equally, not a defect in the new Grafana
+     wiring. Container logs independently confirmed the OpenTelemetry exporter's
+     `Transmission succeeded: Item received: 8. Items accepted: 8` for the fresh
+     requests, so the data was genuinely in flight — the wait was purely
+     Azure-side indexing catching up, the same "eventual consistency" behavior
+     already documented from the original Application Insights verification.
+- **Verified**: `/api/datasources/uid/.../health` → `"Successfully connected to all
+  Azure Monitor endpoints"`; a real KQL query against `AppRequests` executed
+  successfully end-to-end (status 200, correct schema) once the table name was
+  corrected — confirming the full auth + query pipeline works, independent of
+  whether any specific time window has data in it yet.
+- **Not done yet**: actual dashboard panels (request rate, latency, error rate) —
+  next checkpoint. `infra/grafana/provisioning/dashboards/` doesn't exist yet.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -470,13 +531,13 @@ always reflect what's actually working right now, not what's planned (that's
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
 - **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
-  the real FastAPI backend, the real Next.js frontend, and now automated
-  build/push of the backend image on every merge (via GitHub Actions OIDC) are all
-  built and verified — the whole app is genuinely running in Azure, and shipping a
-  new backend image no longer requires a manual `az acr build` (see above). Still
-  unbuilt: automating the *deploy* half (`TF_VAR_api_image` + `terraform apply` on
-  merge — still a deliberate manual step), automating the frontend build/upload the
-  same way, Grafana dashboards, Sentry, load testing.
+  the real FastAPI backend, the real Next.js frontend, automated build/push of the
+  backend image on every merge (via GitHub Actions OIDC), and Grafana's Azure
+  Monitor datasource (checkpoint 1 — connected and verified, see above) are all
+  built. Still unbuilt: actual Grafana dashboard panels (checkpoint 2), automating
+  the *deploy* half of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge —
+  still a deliberate manual step), automating the frontend build/upload the same
+  way, Sentry, load testing.
 
 ## Known limitations / honest caveats
 

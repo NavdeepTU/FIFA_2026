@@ -505,11 +505,43 @@ Verified with an actual successful run, not just a clean `terraform apply`: all
 three CI jobs passed together, and the resulting commit-SHA-tagged image was
 confirmed present in ACR.
 
-**Still Phase 4**: automating the *deploy* half on merge (`terraform apply` still a
-deliberate manual step, same for the frontend build/upload); self-hosted Grafana
-dashboards on top of Application Insights, Sentry for frontend/backend error
-tracking, and a Groq token-usage dashboard (cost/FinOps angle even though the API
-itself is free).
+**Grafana's Azure Monitor datasource is now genuinely connected** (checkpoint 1 of
+2 — dashboard panels are the next, separate checkpoint). The Grafana Container App
+(`ca-fifa26-dev-grafana`) has `min_replicas = 0` and no persistent disk, so any
+config set up by clicking around its own UI would be wiped on the next
+scale-to-zero cycle — used Grafana's "provisioning" feature instead (config files
+baked into a custom image, `infra/grafana/Dockerfile` + `infra/grafana/
+provisioning/`, built via `az acr build` the same way the backend image is) rather
+than a paid persistent-disk add-on. Authenticated via its own user-assigned
+managed identity (`id-fifa26-dev-grafana`, separate from the API's, scoped to only
+`Log Analytics Reader` + `Key Vault Secrets User` + `AcrPull`) — no client secret,
+no connection string.
+
+Three real issues surfaced while verifying, each root-caused:
+1. `azureAuthType: msi` in the datasource config alone wasn't enough — Grafana
+   gates managed-identity auth behind a separate server-wide opt-in
+   (`GF_AZURE_MANAGED_IDENTITY_ENABLED=true` + `GF_AZURE_MANAGED_IDENTITY_CLIENT_ID`
+   for a user-assigned identity), confirmed from Grafana's own source rather than
+   guessed.
+2. Querying the raw Log Analytics workspace directly (what Grafana's datasource
+   does) needs the underlying `AppRequests`/`AppTraces` table names, not the
+   `requests`/`traces` aliases that only exist in Application Insights' own query
+   surface.
+3. Fresh telemetry took longer than expected to become queryable — cross-checked
+   against `az monitor app-insights query` (proven working in earlier sessions)
+   and got the identical `0` at the same moment, confirming genuine Azure-side
+   ingestion lag affecting both query surfaces equally, not a defect in the new
+   wiring; container logs independently confirmed the exporter's transmissions
+   were being accepted the whole time.
+
+Verified: the datasource health check reports success against all three Azure
+Monitor endpoints, and a real KQL query executes end-to-end (correct schema,
+`200`) once pointed at the right table names.
+
+**Still Phase 4**: actual Grafana dashboard panels (checkpoint 2); automating the
+*deploy* half on merge (`terraform apply` still a deliberate manual step, same for
+the frontend build/upload); Sentry for frontend/backend error tracking; a Groq
+token-usage dashboard (cost/FinOps angle even though the API itself is free).
 
 ## 10. Status checklist
 
@@ -528,6 +560,7 @@ itself is free).
       NL→chart, match recaps (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
       Application Insights wiring, the real backend + frontend both deployed and
-      verified live end-to-end, and automated backend image build/push via GitHub
-      Actions OIDC (see §7, §9) are all built; automating the deploy half on merge,
-      `terraform apply` on merge, Grafana, and Sentry not yet
+      verified live end-to-end, automated backend image build/push via GitHub
+      Actions OIDC, and Grafana's Azure Monitor datasource (checkpoint 1 of 2, see
+      §9) are all built; Grafana dashboard panels (checkpoint 2), automating the
+      deploy half on merge, `terraform apply` on merge, and Sentry not yet

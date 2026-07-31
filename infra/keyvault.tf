@@ -30,3 +30,11 @@ resource "azurerm_key_vault_secret" "groq_api_key" {
 
   depends_on = [azurerm_role_assignment.deployer_kv_admin]
 }
+
+resource "azurerm_key_vault_secret" "grafana_admin_password" {
+  name         = "grafana-admin-password"
+  key_vault_id = azurerm_key_vault.this.id
+  value        = var.grafana_admin_password
+
+  depends_on = [azurerm_role_assignment.deployer_kv_admin]
+}
