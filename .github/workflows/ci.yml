@@ -91,4 +91,14 @@ jobs:
       # human can tell exactly which commit produced a given image. This job only
       # builds and pushes; deploying a specific tag to the Container App (via
       # TF_VAR_api_image + `terraform apply`) is still a deliberate manual step.
-      - run: az acr build --registry acrfifa26dev6q3jm1 --image fifa26-api:${{ github.sha }} --file backend/Dockerfile backend
+      #
+      # --resource-group is required here, not optional: without it, `az acr build`
+      # resolves --registry by NAME via a subscription-wide lookup, which needs
+      # broader list/read permissions than this identity has -- it's only granted
+      # AcrPush scoped to this one registry resource (least privilege, see
+      # container_registry.tf), not any subscription- or resource-group-level Reader
+      # role. Passing --resource-group builds the resource ID directly, skipping that
+      # lookup entirely, so the narrow scope is enough. First real run failed with
+      # "could not be found in subscription" despite the registry existing -- this is
+      # why.
+      - run: az acr build --registry acrfifa26dev6q3jm1 --resource-group rg-fifa26-dev --image fifa26-api:${{ github.sha }} --file backend/Dockerfile backend
