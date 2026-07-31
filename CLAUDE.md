@@ -75,3 +75,21 @@ it's no longer a hard blocker.
 - Keep explanations concise and practical unless I explicitly ask for a deep dive.
 - At the end of every implementation, assume I may be asked to explain this work in an interview. Proactively point out any technologies, design decisions, or code that I should understand before I claim experience with them.
 - Do not optimize only for getting the feature working. Optimize for production-quality engineering. Explain important trade-offs, scalability concerns, security implications, performance considerations, and testing strategy whenever they are relevant.
+
+## Claude Code feature literacy
+
+- Alongside architecture/cloud/ML/GenAI teaching, the user wants to build real
+  fluency in Claude Code itself — as they grow into an architect role, knowing what
+  an agentic coding tool can actually do (and where its limits are) is part of the
+  learning goal for this project, not a side note.
+- When a Claude Code feature (subagents/the Agent tool, custom slash commands,
+  Plan mode, background tasks, hooks, tracked tasks, git worktrees, memory,
+  scheduled wakeups, etc.) is genuinely the right tool for a step in this project,
+  use it — and briefly call out what it is, why it fit that step, and how the same
+  capability would apply to leading an engineering team day to day (not just solo
+  coding). Keep the callout to a sentence or two; save a deeper explanation for when
+  asked.
+- This project already has one artifact of this kind: `.claude/commands/
+  interview-quiz.md`, a custom project-specific slash command built earlier. Point
+  out opportunities to build more of these (custom commands, hooks, etc.) as they
+  come up naturally in the course of building, rather than as a separate assignment.

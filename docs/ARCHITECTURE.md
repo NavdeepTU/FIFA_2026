@@ -305,11 +305,33 @@ property of the account — worth revisiting (`var.postgres_location` back to ma
 everything into one region becomes worthwhile (mainly: no real latency concern for a
 low-traffic portfolio project as-is).
 
-**What's deployed but not yet real**: the `api` Container App is running Microsoft's
-`containerapps-helloworld` placeholder image — the project's own Docker image hasn't
-been built/pushed yet (Phase 4/CI-CD). The Postgres database exists but is empty; the
-ETL hasn't been pointed at it. Both are the natural next steps once this phase's
-learning goals (successfully standing up real infra) are consolidated.
+**The `api` Container App now runs the project's real code**, not a placeholder.
+`backend/Dockerfile` builds a lean serving image (`python:3.13-slim` + `libgomp1` for
+xgboost + `requirements.txt` installed as its own cached layer + just `app/`,
+`genai/`, `ml/artifacts/` — no tests, no training scripts); `backend/.dockerignore`
+keeps the 519MB local `.venv` out of the build context and excludes `.env` so real
+secrets can't accidentally land in an image layer. The image is built and pushed with
+`az acr build` (cloud-side build via Azure Container Registry's build service —
+`infra/container_registry.tf`, Basic SKU, ~$5/month, the one resource in this stack
+with a real ongoing cost and no free tier), so no Docker install was needed locally.
+The Container App pulls from ACR using its existing managed identity (`AcrPull` role
+grant) rather than a stored registry credential — the same "no secret at all, just an
+identity + role" pattern already used for Key Vault access.
+
+**Verified genuinely live**, not just "terraform apply succeeded": hit the real
+deployed URL and got real responses back — `/health`, `/health/ready` (a live
+Postgres ping from inside the container), and `/analytics/standings` (real data from
+the deployed database). While verifying, found that `container_apps.tf`'s
+`api_fqdn`/`grafana_fqdn` outputs used `latest_revision_fqdn` — an attribute scoped to
+a specific revision that only resolves with an explicit traffic label (not used in
+this stack) — so visiting it returned Azure's generic "stopped or does not exist"
+page even though the app was healthy. Fixed both outputs to use `ingress[0].fqdn`,
+the stable app-level hostname that always routes to whichever revision holds current
+traffic. **Not yet automated**: this session's build/push/deploy was done by hand;
+doing it on every merge via CI (needing a registry step + OIDC federated credentials)
+is the remaining Phase 4 piece. The app also scales to zero when idle
+(`min_replicas = 0`), so the first request after a quiet period has a real cold-start
+delay — worth knowing before a live demo.
 
 ## 8. ML models (Phase 2)
 
@@ -395,16 +417,18 @@ you edit a stat line, verified end-to-end against the real trained model.
   `appi-fifa26-dev` resource: ran the API locally with the live connection string,
   hit a few endpoints, confirmed every exported batch got `200` from the ingestion
   endpoint, and confirmed the requests were queryable via `az monitor app-insights
-  query`. Not yet exercised through the actual deployed Container App, since that
-  still runs the placeholder image (see below) — the wiring itself needs no further
-  changes once a real image ships, since it already reads the connection string
-  from the environment that `infra/container_apps.tf` already passes in.
+  query`. Now also confirmed live through the actual deployed Container App (§7) —
+  the same `azure.monitor.opentelemetry` export traffic shows up in the real
+  container's logs. No code changes were needed to make that happen once a real
+  image shipped, since the app already read the connection string from the
+  environment that `infra/container_apps.tf` was already passing in.
 
-**Still Phase 4**: building/pushing a real Docker image for the API on merge (needs a
-container registry + OIDC federated credentials, neither set up yet) and `terraform
-apply` on merge; self-hosted Grafana dashboards on top of Application Insights, Sentry
-for frontend/backend error tracking, and a Groq token-usage dashboard (cost/FinOps
-angle even though the API itself is free).
+**Still Phase 4**: automating build/push/deploy on every merge (needs a registry step
+in CI + OIDC federated credentials so GitHub Actions can authenticate to Azure
+without a long-lived secret — today's image was built and deployed by hand) and
+`terraform apply` on merge; self-hosted Grafana dashboards on top of Application
+Insights, Sentry for frontend/backend error tracking, and a Groq token-usage
+dashboard (cost/FinOps angle even though the API itself is free).
 
 ## 10. Status checklist
 
@@ -421,6 +445,8 @@ angle even though the API itself is free).
 - [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
       limiting, player + team scouting reports, all live on Azure. Remaining:
       NL→chart, match recaps (see §4.5)
-- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI and
-      Application Insights wiring both built and verified (see §9); Docker/registry,
-      `terraform apply` on merge, Grafana, and Sentry not yet
+- [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
+      Application Insights wiring, and a real Docker image built/pushed/deployed to
+      the live Container App are all built and verified (see §7, §9); automating
+      that build/deploy on merge, `terraform apply` on merge, Grafana, and Sentry
+      not yet

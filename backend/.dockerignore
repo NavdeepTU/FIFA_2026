@@ -1,0 +1,13 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+tests
+.env
+ml/requirements.txt
+ml/train_*.py
+ml/features.py
+genai/generate_embeddings.py
+genai/generate_team_embeddings.py
+genai/requirements.txt
+requirements-dev.txt

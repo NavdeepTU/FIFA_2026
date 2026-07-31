@@ -1,8 +1,9 @@
 # Project Status
 
-Last updated: 2026-07-30 (Application Insights wiring). Update this file whenever a
-task completes or scope changes — it should always reflect what's actually working
-right now, not what's planned (that's `project_scope.md`).
+Last updated: 2026-07-31 (real Docker image built, pushed to ACR, and deployed —
+the API is genuinely live in Azure). Update this file whenever a task completes or
+scope changes — it should always reflect what's actually working right now, not
+what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -237,6 +238,54 @@ right now, not what's planned (that's `project_scope.md`).
   image, this wiring needs no further changes — it already reads the connection string
   from the environment, which `infra/container_apps.tf` already passes in.
 
+### Containerization & real deployment (Phase 4, third slice)
+- **`backend/Dockerfile`**: builds a lean serving image for the FastAPI backend —
+  `python:3.13-slim` base, `libgomp1` (xgboost's compiled extension needs it at
+  runtime and it's not in the slim base — a real "builds fine, crashes on first
+  `/predict` call" gotcha caught before it shipped), `requirements.txt`/`pip install`
+  as its own layer before the code is copied in (so code-only changes reuse the
+  cached dependency layer on rebuild), then just `app/`, `genai/`, and
+  `ml/artifacts/` — no tests, no training scripts, no dev venv.
+  **`backend/.dockerignore`** keeps the build context small (excludes the 519MB
+  `.venv`) and, more importantly, excludes `.env` so real secrets can never
+  accidentally get baked into an image layer.
+- **`infra/container_registry.tf`**: provisions Azure Container Registry (Basic SKU,
+  ~$5/month — the one resource in this stack with a real ongoing cost and no free
+  tier; confirmed with the user before provisioning). The Container App environment's
+  existing managed identity was granted the `AcrPull` role, so the deployed app
+  authenticates to the registry with zero stored credentials — no registry
+  username/password exists anywhere in Terraform state or Key Vault.
+- **Image built and pushed via `az acr build`** (`fifa26-api:v1`) — builds in Azure
+  itself, not locally, so no Docker install was needed on the laptop at all.
+  `infra/container_apps.tf`'s `api` app was then repointed from the Microsoft
+  placeholder hello-world image to this real one via `TF_VAR_api_image` +
+  `terraform apply`.
+- **Verified genuinely live**, not just "applied without error": hit the real
+  deployed Container App's URL and got back real responses —
+  `/health` → `{"status":"ok"}`, `/health/ready` → `{"status":"ready"}` (a live
+  Postgres ping from inside the container, not mocked), `/analytics/standings` →
+  real team data from the deployed database. This is also the first true end-to-end
+  verification of the Application Insights wiring from last session — the container
+  logs show the same `azure.monitor.opentelemetry` traffic as the earlier local
+  test, now coming from the actual deployed app rather than a local process.
+- **Found and fixed a real deployment bug while verifying**: `infra/container_apps.tf`'s
+  `api_fqdn`/`grafana_fqdn` outputs used `latest_revision_fqdn`, which is scoped to a
+  specific revision and only resolves if that revision has an explicit traffic label
+  assigned — this stack doesn't use per-revision labels, so hitting that hostname
+  returned Azure's generic "This Container App is stopped or does not exist" page
+  even though the app was running perfectly fine underneath. Root-caused via
+  `az containerapp ingress show`, which surfaced the real stable, app-level hostname
+  (`ingress[0].fqdn`) that always routes to whichever revision holds 100% traffic.
+  Fixed both outputs; a good example of "the resource applied successfully" not being
+  the same thing as "the thing Terraform told you to visit actually works."
+- **Still placeholder/todo**: the image is built and pushed manually this session,
+  not yet automated — building/pushing on every merge (needs a container registry
+  step in CI, OIDC federated credentials for `terraform apply` from GitHub Actions)
+  is the next natural Phase 4 piece. The Container App also scales to zero when
+  idle (`min_replicas = 0`), so the first request after any idle period has a real
+  cold-start delay — acceptable for a portfolio project, worth knowing before
+  demoing it live.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -259,10 +308,11 @@ right now, not what's planned (that's `project_scope.md`).
   `GROQ_API_KEY` from `backend/.env`, both fed to Terraform via `TF_VAR_*` env vars
   rather than the tracked `terraform.tfvars` file, and both landed in Key Vault as the
   real secret store — never committed to git.
-- **What's still placeholder**: the `api` Container App is running Microsoft's
-  `containerapps-helloworld` image, not the project's actual FastAPI code — building
-  and pushing a real image is Phase 4 (CI/CD) work, not done yet. The database is live
-  but empty — the ETL hasn't been pointed at it yet. Both are natural next tasks.
+- **No longer placeholder**: the `api` Container App now runs the project's real
+  FastAPI image (see "Containerization & real deployment" above), and the database
+  has been populated since an earlier session. Building/pushing that image
+  automatically on every merge (rather than by hand, as done this session) is the
+  remaining Phase 4 CI/CD piece.
 - **Provisioning was rocky and is worth documenting honestly**: the very first
   `terraform plan` hung for 3.5+ hours (not actually frozen, just an unrelated Azure
   resource provider — `Microsoft.DataMigration`, never used by this project — stuck
@@ -320,15 +370,13 @@ right now, not what's planned (that's `project_scope.md`).
   backend and frontend, answers both player- and team-level questions, with a real
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
-- **Phase 4 (observability/CI/CD)**: lint + test CI is built, and Application
-  Insights wiring is built and verified live (see above). Still unbuilt:
-  building/pushing a real Docker image for the API on merge (needs a container
-  registry + OIDC federated credentials first — Container App currently runs a
-  placeholder hello-world image; the database behind it is populated and ready, but
-  nothing is actually serving it yet — this is also what would let the Application
-  Insights wiring be verified end-to-end via the real deployed container, not just a
-  local process talking to the real resource), `terraform apply` on merge, Grafana
-  dashboards, Sentry, load testing.
+- **Phase 4 (observability/CI/CD)**: lint + test CI is built, Application Insights
+  wiring is built and verified live, and the real FastAPI image is built, pushed to
+  ACR, and actually deployed and serving traffic (see above). Still unbuilt:
+  automating the build/push/deploy on every merge (needs a registry step in CI +
+  OIDC federated credentials so GitHub Actions can authenticate to Azure without a
+  long-lived secret — today's image was built and deployed by hand), `terraform
+  apply` on merge, Grafana dashboards, Sentry, load testing.
 
 ## Known limitations / honest caveats
 

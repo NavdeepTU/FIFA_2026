@@ -54,6 +54,17 @@ resource "azurerm_container_app" "api" {
     identity_ids = [azurerm_user_assigned_identity.container_apps.id]
   }
 
+  # Credential-free pull: Container Apps authenticates to ACR using the same managed
+  # identity already granted the "AcrPull" role (infra/container_registry.tf), rather
+  # than a stored username/password. Only needed for *private* registries -- the
+  # placeholder mcr.microsoft.com image (var.api_image's default) is public and pulls
+  # fine regardless of this block, so this is safe to apply before a real image
+  # exists in this registry.
+  registry {
+    server   = azurerm_container_registry.this.login_server
+    identity = azurerm_user_assigned_identity.container_apps.id
+  }
+
   secret {
     name                = "database-url"
     key_vault_secret_id = azurerm_key_vault_secret.postgres_url.id
@@ -139,9 +150,16 @@ resource "azurerm_container_app" "grafana" {
 }
 
 output "api_fqdn" {
-  value = azurerm_container_app.api.latest_revision_fqdn
+  # `latest_revision_fqdn` (the resource's top-level attribute) is scoped to a specific
+  # revision and only resolves if that revision has an explicit traffic label assigned
+  # -- this stack doesn't use per-revision labels, so hitting that hostname returns
+  # Azure's generic "This Container App is stopped or does not exist" page even though
+  # the app is running fine. `ingress[0].fqdn` is the stable, app-level hostname that
+  # always routes to whichever revision currently holds 100% traffic -- the one to
+  # actually use. Found this the hard way verifying the real image was live.
+  value = azurerm_container_app.api.ingress[0].fqdn
 }
 
 output "grafana_fqdn" {
-  value = azurerm_container_app.grafana.latest_revision_fqdn
+  value = azurerm_container_app.grafana.ingress[0].fqdn
 }
