@@ -45,6 +45,19 @@ resource "azurerm_role_assignment" "github_actions_acr_push" {
   principal_id         = var.github_actions_sp_object_id
 }
 
+# AcrPush alone isn't enough for `az acr build` -- Azure splits ACR permissions into
+# two layers: data-plane (push/pull actual image bytes, what AcrPush/AcrPull grant)
+# and management-plane (reading the registry resource's own properties via ARM,
+# needed just to look the resource up and queue an ACR Tasks build). Without this,
+# the real error was: "does not have authorization to perform action
+# 'Microsoft.ContainerRegistry/registries/read'" -- Reader is scoped to only this one
+# resource, so it's still read-only and least-privilege, just at the other layer.
+resource "azurerm_role_assignment" "github_actions_acr_reader" {
+  scope                = azurerm_container_registry.this.id
+  role_definition_name = "Reader"
+  principal_id         = var.github_actions_sp_object_id
+}
+
 output "acr_login_server" {
   value = azurerm_container_registry.this.login_server
 }
