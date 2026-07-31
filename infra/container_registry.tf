@@ -45,16 +45,22 @@ resource "azurerm_role_assignment" "github_actions_acr_push" {
   principal_id         = var.github_actions_sp_object_id
 }
 
-# AcrPush alone isn't enough for `az acr build` -- Azure splits ACR permissions into
-# two layers: data-plane (push/pull actual image bytes, what AcrPush/AcrPull grant)
-# and management-plane (reading the registry resource's own properties via ARM,
-# needed just to look the resource up and queue an ACR Tasks build). Without this,
-# the real error was: "does not have authorization to perform action
-# 'Microsoft.ContainerRegistry/registries/read'" -- Reader is scoped to only this one
-# resource, so it's still read-only and least-privilege, just at the other layer.
-resource "azurerm_role_assignment" "github_actions_acr_reader" {
+# `az acr build` runs as an ACR Tasks "quick run" under the hood, which needs several
+# control-plane actions beyond simple push/pull: reading the registry resource,
+# scheduling the task run, and generating a SAS URL to upload the build context
+# (Microsoft.ContainerRegistry/registries/{read,scheduleRun,listBuildSourceUploadUrl}
+# /action, discovered one at a time from real AuthorizationFailed errors -- Reader
+# alone covers only the first of these). Rather than keep hunting down individual
+# actions, this uses Contributor -- Microsoft's own documented recommendation for
+# running `az acr build` under RBAC -- scoped to only this one registry resource, not
+# the resource group or subscription, so the blast radius stays contained to "manage
+# this one registry," nothing else. Contributor's `actions` cover every control-plane
+# operation on this resource but explicitly exclude `dataActions` (actually pushing
+# image bytes), which is why AcrPush above still needs to exist alongside it -- two
+# different axes of Azure RBAC (management-plane vs. data-plane), not overlapping.
+resource "azurerm_role_assignment" "github_actions_acr_contributor" {
   scope                = azurerm_container_registry.this.id
-  role_definition_name = "Reader"
+  role_definition_name = "Contributor"
   principal_id         = var.github_actions_sp_object_id
 }
 
