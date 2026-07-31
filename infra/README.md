@@ -53,11 +53,32 @@ never changes once done.
    rather than guessing at the format.
    The resulting service principal's object ID (`az ad sp show --id <appId>`) is fed into
    Terraform as `github_actions_sp_object_id` (`container_registry.tf`), which grants it
-   `AcrPush` on the registry — the only permission it has, least-privilege by design.
+   `AcrPush` **and** `Contributor`, both scoped to only this one registry resource — see
+   the next gotcha for why it needs both, not just `AcrPush`.
+
+   **Second real gotcha**: `AcrPush` alone isn't enough to run `az acr build`. Azure splits
+   ACR permissions into two independent axes — *data-plane* (`AcrPush`/`AcrPull`: actually
+   pushing/pulling image bytes) and *management-plane* (reading the registry resource
+   itself via ARM, scheduling an ACR Tasks run, generating a SAS URL to upload the build
+   context). `az acr build` needs both. Hunting the specific management-plane actions one
+   `AuthorizationFailed` at a time (`registries/read`, then `registries/scheduleRun`, then
+   `registries/listBuildSourceUploadUrl`, ...) doesn't converge — go straight to
+   `Contributor` scoped to the one registry resource, Microsoft's own documented
+   recommendation for `az acr build` under RBAC. It's still least-privilege in the sense
+   that matters (contained to this one resource, and `Contributor`'s `actions` explicitly
+   exclude `dataActions`, so it still can't push an image byte on its own — `AcrPush` does
+   that half).
+
    Finally, add three **GitHub repository secrets** (Settings → Secrets and variables →
-   Actions) so the `build-push-image` job in `.github/workflows/ci.yml` can log in:
-   `AZURE_CLIENT_ID` (the app's `appId`), `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
+   Actions, "Secrets" tab) so the `build-push-image` job in `.github/workflows/ci.yml` can
+   log in: `AZURE_CLIENT_ID` (the app's `appId`), `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`.
    No client secret is ever created or stored — the whole point of federated credentials.
+   Also add one **repository *variable*** (same page, "Variables" tab — not a secret, it's
+   a public URL): `NEXT_PUBLIC_API_URL` set to the real deployed API's URL. The frontend CI
+   job needs it too, for an unrelated reason: `next build` in static-export mode
+   (`frontend/next.config.ts`) pre-renders every player/team page at build time, which
+   means it needs a real, reachable backend right then, not just the `localhost:8000`
+   fallback in `lib/api.ts`.
 
 ## Running a plan/apply
 

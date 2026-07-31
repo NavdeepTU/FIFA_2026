@@ -1,9 +1,10 @@
 # Project Status
 
-Last updated: 2026-07-31 (frontend deployed as a static export to Azure Blob
-Storage — the whole app, frontend and backend, is genuinely live). Update this file
-whenever a task completes or scope changes — it should always reflect what's
-actually working right now, not what's planned (that's `project_scope.md`).
+Last updated: 2026-07-31 (backend image build/push automated via GitHub Actions
+OIDC — verified with a real successful run after four rounds of real, fixed
+failures). Update this file whenever a task completes or scope changes — it should
+always reflect what's actually working right now, not what's planned (that's
+`project_scope.md`).
 
 ## Done and verified
 
@@ -194,10 +195,9 @@ actually working right now, not what's planned (that's `project_scope.md`).
   `ScoutingReport`, so a change in entity forces a real remount — React's own
   documented pattern for "reset state when a prop changes" — making the redundant
   `setLoading(true)` removable entirely.
-- Deliberately scoped to lint + test only, matching `project_scope.md` §7's split —
-  building/pushing Docker images and `terraform apply` on merge need a container
-  registry and OIDC federated credentials, neither of which exist yet; that's a
-  separate, larger piece of Phase 4, not done here.
+- Originally scoped to lint + test only, since building/pushing Docker images needed
+  a container registry and OIDC federated credentials that didn't exist yet at the
+  time — both now exist and the automation is built (see "CI/CD automation" below).
 - **Verified with a real run on GitHub** — and it caught something local runs never
   would: the first push reported the backend job as failed even though `make install`,
   `make lint`, and `make test` all individually succeeded. The actual failure was in
@@ -337,6 +337,54 @@ actually working right now, not what's planned (that's `project_scope.md`).
   the backend image — folding both into the CI/CD-on-merge pipeline is still the
   remaining Phase 4 piece (see below).
 
+### CI/CD automation (Phase 4, fifth slice)
+- **Every backend deploy up to this point was done by hand** (`az acr build` run
+  locally, three times). `.github/workflows/ci.yml` now has a `build-push-image` job
+  that does the same `az acr build` automatically on every push to `master`, after
+  the lint+test job passes — tagged with the commit SHA, not `latest`, so a human
+  can trace exactly which commit produced a given image. Deliberately still
+  build-and-push only, not deploy: the Container App only picks up a new image via a
+  manual `TF_VAR_api_image` + `terraform apply`, same as before.
+- **Authenticated via GitHub Actions OIDC**, not a stored Azure secret: a federated
+  identity credential (Azure AD app registration, bootstrapped once via `az ad`,
+  documented in `infra/README.md`) lets GitHub mint a short-lived token scoped to
+  this repo's `master` branch, which Azure AD exchanges for an access token that
+  expires with the job. No `AZURE_CLIENT_SECRET` exists anywhere to rotate or leak.
+- **Took four real, distinct failures to get working — each one root-caused and
+  fixed, not worked around**, a genuinely useful debugging trail:
+  1. The federated credential's `subject` used the plain
+     `repo:<owner>/<repo>:ref:refs/heads/<branch>` format from Microsoft's own docs
+     — but GitHub actually presents a newer format with stable numeric IDs attached
+     (`repo:<owner>@<id>/<repo>@<id>:ref:...`, so the trust relationship survives a
+     repo/owner rename). Fixed by reading the exact subject out of the failed run's
+     own logs and matching it verbatim, not guessing at the format.
+  2. `az acr build --registry <name>` without `--resource-group` resolves the
+     registry by a subscription-wide name lookup, which needs broader list/read
+     permissions than a narrowly-scoped role grants. Fixed by passing
+     `--resource-group` explicitly, skipping the lookup entirely.
+  3. `AcrPush` (data-plane push/pull) turned out not to include the management-plane
+     actions `az acr build` also needs (`registries/read`, `.../scheduleRun`,
+     `.../listBuildSourceUploadUrl`) — each surfaced as a separate
+     `AuthorizationFailed` in turn. Rather than keep chasing individual actions,
+     switched to `Contributor` scoped to just the one registry resource (Microsoft's
+     own documented recommendation for `az acr build` under RBAC), kept alongside
+     `AcrPush` since Contributor excludes `dataActions`.
+  4. Separately, the *frontend* CI job also failed — a latent bug from the previous
+     session's static-export work, not caused by this one: `next build` now needs a
+     real reachable backend at build time (`generateStaticParams`), and CI had
+     neither a running backend nor `NEXT_PUBLIC_API_URL` set. Fixed with a new
+     GitHub repository *Variable* (not Secret — it's a public URL) pointing at the
+     real deployed API.
+- **Verified with an actual successful run**, not just "no errors on `terraform
+  apply`": all three jobs (backend lint+test, frontend lint+build, build-push-image)
+  passed together, and the resulting commit-SHA-tagged image was confirmed present
+  in ACR (`az acr repository show-tags`) — not just "the job said success."
+- **Tooling note**: installed GitHub CLI (`gh`) locally mid-session specifically to
+  read raw Actions job logs directly (the GitHub REST API's log-download endpoint
+  requires repo-admin auth even for public repos, so the earlier debugging rounds
+  relied on the user manually copy-pasting error text out of the browser) — sped up
+  the last two fix-verify cycles considerably.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -421,14 +469,14 @@ actually working right now, not what's planned (that's `project_scope.md`).
   backend and frontend, answers both player- and team-level questions, with a real
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
-- **Phase 4 (observability/CI/CD)**: lint + test CI is built; Application Insights
-  wiring, the real FastAPI backend, and the real Next.js frontend are all built,
-  deployed, and verified live end-to-end (see above) — the whole app is genuinely
-  running in Azure now, not just individual pieces applied without error. Still
-  unbuilt: automating build/push/deploy on every merge (needs a registry step in CI
-  + OIDC federated credentials so GitHub Actions can authenticate to Azure without a
-  long-lived secret — every deploy so far, backend and frontend, was done by hand),
-  `terraform apply` on merge, Grafana dashboards, Sentry, load testing.
+- **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
+  the real FastAPI backend, the real Next.js frontend, and now automated
+  build/push of the backend image on every merge (via GitHub Actions OIDC) are all
+  built and verified — the whole app is genuinely running in Azure, and shipping a
+  new backend image no longer requires a manual `az acr build` (see above). Still
+  unbuilt: automating the *deploy* half (`TF_VAR_api_image` + `terraform apply` on
+  merge — still a deliberate manual step), automating the frontend build/upload the
+  same way, Grafana dashboards, Sentry, load testing.
 
 ## Known limitations / honest caveats
 

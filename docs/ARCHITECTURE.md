@@ -468,12 +468,48 @@ you edit a stat line, verified end-to-end against the real trained model.
   image shipped, since the app already read the connection string from the
   environment that `infra/container_apps.tf` was already passing in.
 
-**Still Phase 4**: automating build/push/deploy on every merge (needs a registry step
-in CI + OIDC federated credentials so GitHub Actions can authenticate to Azure
-without a long-lived secret — today's image was built and deployed by hand) and
-`terraform apply` on merge; self-hosted Grafana dashboards on top of Application
-Insights, Sentry for frontend/backend error tracking, and a Groq token-usage
-dashboard (cost/FinOps angle even though the API itself is free).
+**CI/CD: the backend image build/push is now automated**, not manual. A new
+`build-push-image` job in `.github/workflows/ci.yml` runs `az acr build` on every
+push to `master` (after lint+test passes), authenticated via GitHub Actions OIDC —
+a federated identity credential (Azure AD app registration, bootstrapped once via
+`az ad`, `infra/README.md`) lets GitHub mint a short-lived token scoped to this
+repo's `master` branch, which Azure AD exchanges for an access token that expires
+with the job. No `AZURE_CLIENT_SECRET` exists anywhere. Deliberately still
+build-and-push only — the Container App still only picks up a new image via a
+manual `TF_VAR_api_image` + `terraform apply`.
+
+Getting this working took four distinct, real failures, each root-caused rather
+than worked around — a genuinely instructive sequence about how Azure RBAC for ACR
+actually works:
+1. The federated credential's `subject` used the plain
+   `repo:<owner>/<repo>:ref:refs/heads/<branch>` format from Microsoft's docs, but
+   GitHub actually presents a newer format with stable numeric IDs attached
+   (`repo:<owner>@<id>/<repo>@<id>:ref:...`, surviving a repo/owner rename) — fixed
+   by reading the exact subject out of the failed run's own logs rather than
+   guessing.
+2. `az acr build --registry <name>` without `--resource-group` resolves the
+   registry via a subscription-wide name lookup needing broader permissions than a
+   narrowly-scoped role has — fixed by passing `--resource-group` explicitly.
+3. `AcrPush` (data-plane push/pull) doesn't include the management-plane actions
+   `az acr build` also needs to read the registry resource, schedule an ACR Tasks
+   run, and generate a build-context upload URL — each surfaced as a separate
+   `AuthorizationFailed` in turn before switching to `Contributor` scoped to just
+   the one registry resource (Microsoft's documented recommendation), kept
+   alongside `AcrPush` since `Contributor` explicitly excludes `dataActions`.
+4. Separately, the frontend CI job failed too — a latent bug from the static-export
+   work, not this change: `next build` needs a real reachable backend at build time
+   now, and CI had neither one running nor `NEXT_PUBLIC_API_URL` set. Fixed with a
+   new repository *Variable* (not a Secret — it's a public URL).
+
+Verified with an actual successful run, not just a clean `terraform apply`: all
+three CI jobs passed together, and the resulting commit-SHA-tagged image was
+confirmed present in ACR.
+
+**Still Phase 4**: automating the *deploy* half on merge (`terraform apply` still a
+deliberate manual step, same for the frontend build/upload); self-hosted Grafana
+dashboards on top of Application Insights, Sentry for frontend/backend error
+tracking, and a Groq token-usage dashboard (cost/FinOps angle even though the API
+itself is free).
 
 ## 10. Status checklist
 
@@ -491,6 +527,7 @@ dashboard (cost/FinOps angle even though the API itself is free).
       limiting, player + team scouting reports, all live on Azure. Remaining:
       NL→chart, match recaps (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
-      Application Insights wiring, and the real backend + frontend both deployed
-      and verified live end-to-end (see §7, §9) are all built; automating build/
-      deploy on merge, `terraform apply` on merge, Grafana, and Sentry not yet
+      Application Insights wiring, the real backend + frontend both deployed and
+      verified live end-to-end, and automated backend image build/push via GitHub
+      Actions OIDC (see §7, §9) are all built; automating the deploy half on merge,
+      `terraform apply` on merge, Grafana, and Sentry not yet
