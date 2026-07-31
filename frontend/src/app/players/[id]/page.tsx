@@ -2,7 +2,16 @@ import { notFound } from "next/navigation";
 import { DataTable } from "@/components/DataTable";
 import { ScoutingReport } from "@/components/ScoutingReport";
 import { StatTile } from "@/components/StatTile";
-import { getPlayerProfile } from "@/lib/api";
+import { getPlayerIds, getPlayerProfile } from "@/lib/api";
+
+// Static export (`output: "export"` in next.config.ts) has no server left at request
+// time to render a page on demand, so every dynamic route value must be known and
+// pre-rendered at build time. This runs once during `next build`, hitting the real
+// deployed API to enumerate all 1248 player IDs.
+export async function generateStaticParams() {
+  const ids = await getPlayerIds();
+  return ids.map((id) => ({ id }));
+}
 
 export default async function PlayerProfilePage({
   params,

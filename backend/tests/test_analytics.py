@@ -19,6 +19,14 @@ def test_leaderboard_valid_metric(make_client):
     assert resp.json() == rows
 
 
+def test_player_ids(make_client):
+    rows = [{"player_id": "P00001"}, {"player_id": "P00002"}]
+    client = make_client([rows])
+    resp = client.get("/analytics/players/ids")
+    assert resp.status_code == 200
+    assert resp.json() == ["P00001", "P00002"]
+
+
 def test_player_not_found(make_client):
     client = make_client([[]])  # profile query returns no rows
     resp = client.get("/analytics/players/P99999")

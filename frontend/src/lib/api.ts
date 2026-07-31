@@ -1,7 +1,12 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
+  // `force-cache` (Next's default) rather than `no-store`: the dataset behind these
+  // endpoints is a fixed synthetic snapshot, not live data, so fetching once at build
+  // time and baking the result into static HTML is the correct fit, not a compromise
+  // -- and it's required for `output: "export"` in next.config.ts, which has no
+  // server left at request time to satisfy a `no-store` (always re-fetch) directive.
+  const res = await fetch(`${API_BASE_URL}${path}`, { cache: "force-cache" });
   if (!res.ok) {
     throw new Error(`API ${path} failed: ${res.status}`);
   }
@@ -105,6 +110,8 @@ export const getLeaderboard = (metric: string, limit = 10, position?: string) =>
   if (position) params.set("position", position);
   return apiFetch<PlayerLeaderboardRow[]>(`/analytics/leaderboard?${params}`);
 };
+
+export const getPlayerIds = () => apiFetch<string[]>("/analytics/players/ids");
 
 export const getPlayerProfile = (playerId: string) =>
   apiFetch<PlayerProfile>(`/analytics/players/${playerId}`);

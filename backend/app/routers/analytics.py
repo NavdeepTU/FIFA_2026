@@ -46,6 +46,17 @@ def leaderboard(
     return list(rows)
 
 
+@router.get("/players/ids")
+def player_ids(db: Connection = Depends(get_db)):
+    """Every player ID, no ranking/limit -- a directory listing, distinct from
+    /leaderboard's capped top-N. Exists so the static-exported frontend can enumerate
+    every /players/{id} page to pre-render at build time (output: "export" requires
+    knowing every dynamic route value upfront; there's no server left at request time
+    to render one on demand)."""
+    rows = db.execute(text("select player_id from mv_player_tournament_stats")).mappings().all()
+    return [row["player_id"] for row in rows]
+
+
 @router.get("/players/{player_id}")
 def player_profile(player_id: str, db: Connection = Depends(get_db)):
     player = db.execute(

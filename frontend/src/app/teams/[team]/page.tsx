@@ -3,7 +3,14 @@ import { notFound } from "next/navigation";
 import { DataTable } from "@/components/DataTable";
 import { ScoutingReport } from "@/components/ScoutingReport";
 import { StatTile } from "@/components/StatTile";
-import { getTeamProfile } from "@/lib/api";
+import { getStandings, getTeamProfile } from "@/lib/api";
+
+// See players/[id]/page.tsx's generateStaticParams for why this is required for
+// static export. getStandings() already returns all 48 teams uncapped.
+export async function generateStaticParams() {
+  const standings = await getStandings();
+  return standings.map((s) => ({ team: s.team }));
+}
 
 export default async function TeamProfilePage({
   params,

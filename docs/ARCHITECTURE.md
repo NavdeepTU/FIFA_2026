@@ -333,6 +333,51 @@ is the remaining Phase 4 piece. The app also scales to zero when idle
 (`min_replicas = 0`), so the first request after a quiet period has a real cold-start
 delay — worth knowing before a live demo.
 
+**The frontend is deployed too, not just the API** — as a Next.js static export
+(`output: "export"` + `trailingSlash: true`, `frontend/next.config.ts`) to the Blob
+Storage static website hosting `infra/storage.tf` already provisioned. Static export
+was the right fit, not a shortcut: the dataset is a fixed synthetic snapshot rather
+than live data, so baking every page at build time is correct, and it needs no
+running compute at all (unlike the API's Container App) — just files served directly
+from storage, which is why it lives on a completely different Azure service.
+
+Getting there required fixing real incompatibilities with static export, not just
+flipping the config flag: the player/team profile pages fetched server-side with
+`cache: "no-store"`, which has no meaning once there's no server left at request
+time (switched to `force-cache` — fetched once at build time, appropriate given the
+static dataset). The two dynamic routes needed `generateStaticParams()`, since
+static export must know every route to pre-render upfront (`dynamicParams: true` —
+"render one later, on demand" — isn't supported at all in this mode). That required
+a **new backend endpoint**, `GET /analytics/players/ids` (`backend/app/routers/
+analytics.py`) — an uncapped directory listing of every player ID, distinct from
+`/leaderboard`'s deliberately-capped top-N — since nothing existing returned the
+full 1248-player list. Shipped as `fifa26-api:v2`, redeployed the same way as the
+first image. The `/players` leaderboard page also read `?metric=` server-side
+(same problem) — converted to client-side handling via `useSearchParams()` +
+`router.push()` (the pattern `MetricSelect.tsx` already used to *write* the param),
+wrapped in the `Suspense` boundary Next requires for that hook. Hit the same
+`react-hooks/set-state-in-effect` lint rule from the CI session again in the
+process; fixed with the same `key`-based remount pattern rather than resetting
+state manually inside the effect.
+
+**CORS** needed real wiring once the frontend and API landed on different
+hostnames: added the frontend's real URL to the API's `CORS_ORIGINS` env var
+(`infra/container_apps.tf`, `jsonencode(...)` of the storage account's
+`primary_web_endpoint` with the trailing slash trimmed — a browser's `Origin` header
+never has one) — verified with an actual CORS preflight request, not assumed.
+`var.api_image`'s default was also hardened to the real image tag (was the
+Microsoft placeholder) so a bare `terraform apply` can no longer silently roll the
+live deployment backward if `TF_VAR_api_image` is forgotten.
+
+**Verified genuinely live, end-to-end**: built with `NEXT_PUBLIC_API_URL` pointed at
+the real deployed API, uploaded all 1,304 generated pages (~568MB — Next's App
+Router static export ships RSC client-navigation payloads alongside the HTML, not
+just `.html` files) to the storage account's `$web` container via `az storage blob
+upload-batch`, then confirmed live in the browser and via `curl`: the homepage
+renders real baked-in data, player/team pages load, and a full CORS preflight +
+actual request from the deployed frontend's real origin to the deployed API both
+succeed.
+
 ## 8. ML models (Phase 2)
 
 Status: **built and served**. Code: `backend/ml/features.py` (shared feature engineering)
@@ -446,7 +491,6 @@ dashboard (cost/FinOps angle even though the API itself is free).
       limiting, player + team scouting reports, all live on Azure. Remaining:
       NL→chart, match recaps (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
-      Application Insights wiring, and a real Docker image built/pushed/deployed to
-      the live Container App are all built and verified (see §7, §9); automating
-      that build/deploy on merge, `terraform apply` on merge, Grafana, and Sentry
-      not yet
+      Application Insights wiring, and the real backend + frontend both deployed
+      and verified live end-to-end (see §7, §9) are all built; automating build/
+      deploy on merge, `terraform apply` on merge, Grafana, and Sentry not yet

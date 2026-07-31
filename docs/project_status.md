@@ -1,9 +1,9 @@
 # Project Status
 
-Last updated: 2026-07-31 (real Docker image built, pushed to ACR, and deployed —
-the API is genuinely live in Azure). Update this file whenever a task completes or
-scope changes — it should always reflect what's actually working right now, not
-what's planned (that's `project_scope.md`).
+Last updated: 2026-07-31 (frontend deployed as a static export to Azure Blob
+Storage — the whole app, frontend and backend, is genuinely live). Update this file
+whenever a task completes or scope changes — it should always reflect what's
+actually working right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -62,6 +62,8 @@ what's planned (that's `project_scope.md`).
   "API unreachable" fallback when the backend isn't running (checked on both `/predict`
   and `/chat`), and end-to-end against a live local backend — including a real
   grounded chat answer rendered in the browser with matching source players shown.
+- **Deployed to Azure as a static export** (see "Frontend deployment" below) — live at
+  https://stfifa266q3jm1.z13.web.core.windows.net/.
 
 ### GenAI (Phase 3, in progress)
 - **Embeddings**: `backend/genai/generate_embeddings.py` populates `player_embeddings`
@@ -286,6 +288,55 @@ what's planned (that's `project_scope.md`).
   cold-start delay — acceptable for a portfolio project, worth knowing before
   demoing it live.
 
+### Frontend deployment (Phase 4, fourth slice)
+- **The whole dashboard is now live**, not just the API — deployed as a Next.js
+  static export (`output: "export"` + `trailingSlash: true` in `next.config.ts`) to
+  the Blob Storage static website hosting already provisioned in `infra/storage.tf`.
+  Chosen because the dataset is a fixed synthetic snapshot rather than live data, so
+  pre-rendering everything at build time is the correct fit, not a compromise — and
+  because it needs no running server/compute at all (unlike the API), just files
+  served directly from storage.
+- **Several real incompatibilities with static export were found and fixed**, not
+  just a config flip: the player/team profile pages did per-request server-side
+  fetching (`cache: "no-store"`), which has no meaning once there's no server left at
+  request time — switched to `force-cache` (fetched once at build time). The two
+  dynamic routes (`/players/[id]`, `/teams/[team]`) needed `generateStaticParams()`
+  so Next knows every page to pre-render upfront (`dynamicParams: true`, i.e.
+  "render one on demand later," isn't supported in static export at all). This
+  required a **new backend endpoint**, `GET /analytics/players/ids`
+  (`backend/app/routers/analytics.py`) — a plain directory listing of all 1248
+  player IDs, distinct from `/leaderboard`'s deliberately-capped top-N — since
+  nothing existing returned the full uncapped list. Shipped as a new image
+  (`fifa26-api:v2`) via `az acr build`, redeployed the same way as the first image.
+  The `/players` leaderboard page also read `?metric=` server-side (also
+  incompatible) — converted to client-side query-param handling via
+  `useSearchParams()` + `router.push()` (the pattern `MetricSelect.tsx` already used
+  to *write* the param), wrapped in a `Suspense` boundary as Next requires. Hit the
+  same `react-hooks/set-state-in-effect` ESLint rule from an earlier session in the
+  process; fixed with the same pattern (`key`-based remount instead of manually
+  resetting state inside the effect).
+- **CORS**: the frontend and API now live on different hostnames, so browser
+  requests between them are cross-origin. Added the frontend's real URL to the
+  deployed API's `CORS_ORIGINS` env var (`infra/container_apps.tf`, `jsonencode(...)`
+  of the storage account's `primary_web_endpoint` with its trailing slash trimmed,
+  since a browser's `Origin` header never has a path) — verified via a real CORS
+  preflight request against the deployed API, not just assumed to be correct.
+- **Hardened `var.api_image`'s default** to the real image tag instead of the
+  original Microsoft placeholder, so a future plain `terraform apply` (without
+  remembering to pass `TF_VAR_api_image`) can't silently roll the live deployment
+  back to hello-world.
+- **Verified genuinely live, end-to-end**: built the static export with
+  `NEXT_PUBLIC_API_URL` pointed at the real deployed API, uploaded all 1,304
+  generated pages (~568MB — Next's App Router static export includes RSC
+  navigation payloads alongside the HTML, not just `.html` files) to the storage
+  account's `$web` container via `az storage blob upload-batch`, then confirmed
+  live: the homepage renders real baked-in data, individual player and team pages
+  load (spot-checked), and a full CORS preflight + actual request from the deployed
+  frontend's real origin to the deployed API both succeed.
+- **Not yet automated**: this build+upload was done by hand this session, same as
+  the backend image — folding both into the CI/CD-on-merge pipeline is still the
+  remaining Phase 4 piece (see below).
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -370,13 +421,14 @@ what's planned (that's `project_scope.md`).
   backend and frontend, answers both player- and team-level questions, with a real
   usage safety net. Still unbuilt: natural-language → chart, auto-generated match
   recaps (the one remaining "reports" item — match-level, not player/team-level).
-- **Phase 4 (observability/CI/CD)**: lint + test CI is built, Application Insights
-  wiring is built and verified live, and the real FastAPI image is built, pushed to
-  ACR, and actually deployed and serving traffic (see above). Still unbuilt:
-  automating the build/push/deploy on every merge (needs a registry step in CI +
-  OIDC federated credentials so GitHub Actions can authenticate to Azure without a
-  long-lived secret — today's image was built and deployed by hand), `terraform
-  apply` on merge, Grafana dashboards, Sentry, load testing.
+- **Phase 4 (observability/CI/CD)**: lint + test CI is built; Application Insights
+  wiring, the real FastAPI backend, and the real Next.js frontend are all built,
+  deployed, and verified live end-to-end (see above) — the whole app is genuinely
+  running in Azure now, not just individual pieces applied without error. Still
+  unbuilt: automating build/push/deploy on every merge (needs a registry step in CI
+  + OIDC federated credentials so GitHub Actions can authenticate to Azure without a
+  long-lived secret — every deploy so far, backend and frontend, was done by hand),
+  `terraform apply` on merge, Grafana dashboards, Sentry, load testing.
 
 ## Known limitations / honest caveats
 

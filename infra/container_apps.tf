@@ -1,7 +1,7 @@
 variable "api_image" {
-  description = "Set by CI after each build/push. Placeholder here so the first apply succeeds before any image exists."
+  description = "Overridden via TF_VAR_api_image after each manual build/push (az acr build); until CI automates this, the default here is the source of truth for 'what's actually live' so a plain `terraform apply` can't silently roll the deployment back to an older image."
   type        = string
-  default     = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  default     = "acrfifa26dev6q3jm1.azurecr.io/fifa26-api:v2"
 }
 
 # Azure Monitor's free monthly data ingestion allowance (5GB) comfortably covers a
@@ -98,6 +98,19 @@ resource "azurerm_container_app" "api" {
       env {
         name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
         value = azurerm_application_insights.this.connection_string
+      }
+      env {
+        # The deployed frontend (Blob Storage static site) and this API are on
+        # different hostnames, so browser requests from one to the other are
+        # cross-origin -- FastAPI's CORSMiddleware only allows origins in this list.
+        # `trimsuffix` strips the trailing slash Azure's endpoint URL includes, since
+        # a browser's `Origin` header never has one (exact string match, no path).
+        # localhost:3000 stays too, for testing `npm run dev` against this live API.
+        name = "CORS_ORIGINS"
+        value = jsonencode([
+          trimsuffix(azurerm_storage_account.this.primary_web_endpoint, "/"),
+          "http://localhost:3000",
+        ])
       }
     }
   }
