@@ -46,9 +46,16 @@ jobs:
       - run: npm run lint
         working-directory: frontend
 
-      # `next build` type-checks as part of building, so this covers both.
+      # `next build` type-checks as part of building, so this covers both. Since
+      # frontend/next.config.ts sets output: "export", this build statically
+      # pre-renders every player/team page -- which means it needs a real, reachable
+      # backend at build time (generateStaticParams fetches the full player/team
+      # list), not just the localhost fallback in lib/api.ts. Points at the real
+      # deployed API, same as every manual build this project has done so far.
       - run: npm run build
         working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
 
   build-push-image:
     name: Build + push backend image

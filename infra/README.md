@@ -41,6 +41,16 @@ never changes once done.
      "audiences": ["api://AzureADTokenExchange"]
    }'
    ```
+   **Real gotcha hit setting this up**: the plain `repo:<owner>/<repo>:ref:refs/heads/<branch>`
+   subject above is what Microsoft's own docs show, but the actual token GitHub presented
+   used a newer format with stable numeric IDs attached —
+   `repo:<owner>@<owner_id>/<repo>@<repo_id>:ref:refs/heads/<branch>` (this exists so the
+   trust relationship survives a repo/owner rename). The federated credential's `subject`
+   must match the *exact* string GitHub sends, not the docs' example — if `azure/login`
+   fails with `AADSTS700213: No matching federated identity record found`, the fix is to
+   read the exact subject claim straight out of that failed run's own logs (`azure/login`
+   prints it before the error) and update the federated credential to match verbatim,
+   rather than guessing at the format.
    The resulting service principal's object ID (`az ad sp show --id <appId>`) is fed into
    Terraform as `github_actions_sp_object_id` (`container_registry.tf`), which grants it
    `AcrPush` on the registry — the only permission it has, least-privilege by design.
