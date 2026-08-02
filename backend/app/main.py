@@ -9,19 +9,18 @@ from app.config import settings
 from app.db import engine
 from app.logging_config import configure_logging, request_id_var
 from app.middleware import RequestContextMiddleware
-from app.routers import analytics, chat, predict, reports
+from app.routers import analytics, charts, chat, predict, reports
 
 configure_logging()
 logger = logging.getLogger("app")
 
 if settings.applicationinsights_connection_string:
     # Azure Monitor OpenTelemetry Distro: one call wires up the OpenTelemetry SDK to
-    # export to Application Insights and auto-instruments FastAPI/requests/psycopg2
-    # via their standard OTel instrumentation packages -- must run before `FastAPI()`
-    # is constructed below so the FastAPI instrumentor can patch it. Runs after
-    # configure_logging() (not before) because it *adds* a handler to the root logger
-    # rather than replacing it, so both destinations (stdout JSON for local/container
-    # log streams, Application Insights for the deployed API) stay active together.
+    # export to Application Insights and auto-instruments requests/psycopg2 via their
+    # standard OTel instrumentation packages. Runs after configure_logging() (not
+    # before) because it *adds* a handler to the root logger rather than replacing
+    # it, so both destinations (stdout JSON for local/container log streams,
+    # Application Insights for the deployed API) stay active together.
     from azure.monitor.opentelemetry import configure_azure_monitor
 
     configure_azure_monitor(
@@ -33,6 +32,22 @@ else:
     logger.info("application_insights_not_configured")
 
 app = FastAPI(title="FIFA World Cup 2026 Analytics API")
+
+if settings.applicationinsights_connection_string:
+    # FastAPI specifically needs this *explicit* call, unlike requests/psycopg2 above.
+    # configure_azure_monitor() "auto-instruments" FastAPI by reassigning the
+    # `fastapi` module's FastAPI attribute to an instrumented subclass -- but
+    # `from fastapi import FastAPI` at the top of this file already bound the
+    # *original* class into this module's namespace at import time, before that
+    # reassignment happened. Later mutating `fastapi.FastAPI` doesn't retroactively
+    # update a name Python already bound elsewhere, so `app = FastAPI(...)` above
+    # silently built a plain, uninstrumented app -- no error, just no request span,
+    # ever, discovered only because Application Insights' AppRequests table stayed
+    # permanently empty while everything else worked. Instrumenting this exact `app`
+    # object directly sidesteps the whole import-order trap.
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    FastAPIInstrumentor.instrument_app(app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,6 +76,7 @@ app.include_router(analytics.router)
 app.include_router(predict.router)
 app.include_router(chat.router)
 app.include_router(reports.router)
+app.include_router(charts.router)
 
 
 @app.get("/health")

@@ -240,9 +240,34 @@ to call), embedded on both the player and team profile pages. Verified live,
 end-to-end: two players and one team (fresh generation + pre-cached load each),
 player page re-verified for regressions after the shared-component refactor.
 
-**Not yet built**: NL→chart, auto-generated match recaps (the one remaining "reports"
-item — match-level rather than player/team-level; would need a per-match cache key
-and likely a frontend matches page, which doesn't exist yet).
+**Natural-language → chart** (`POST /charts/ask`, `backend/app/routers/charts.py`) —
+backend only so far, chart rendering on the frontend is a separate later piece. This
+is the one GenAI feature in this project where "constrain the LLM to something safe"
+matters most, since the naive version of this feature (ask an LLM to write SQL, run
+it) is a textbook prompt-injection/SQL-injection risk. The actual design, matching
+`project_scope.md` §5 exactly: `backend/genai/chart_specs.py` defines a **fixed
+allowlist of pre-written, parameter-free queries** (`CHART_SPECS`, e.g.
+`top_scorers`, `team_points`, `goals_by_stage` — 9 total). The LLM's only job
+(`genai/llm.py`'s `classify_chart_template()`, using Groq's JSON mode —
+`response_format={"type": "json_object"}`, for reliable structured output instead of
+parsing free text) is to pick one allowlist entry **by name**. It never sees, writes,
+or influences any SQL. The router parses that JSON and checks the name against the
+real dictionary; anything that isn't an exact key — malformed JSON, a hallucinated
+name, `{"template": null}` when nothing fits — is rejected with a 422 before it gets
+anywhere near a database call. This means the worst a fully compromised or
+adversarially-prompted LLM response can do is name something outside the allowlist,
+which is simply rejected — there is no code path where LLM output becomes part of a
+query string. Shares the same rate limiter as `/chat/*` and `/reports/*`. Verified
+live against real Groq and the real database across several phrasings ("who are the
+top goal scorers" → `top_scorers`, "which teams are winning the most" →
+`team_points`, "best defense based on clean sheets" → `team_clean_sheets`), plus a
+deliberately off-topic question ("what is the capital of France?") correctly
+producing a 422 rather than a guess.
+
+**Not yet built**: chart *rendering* on the frontend (next checkpoint for the above),
+auto-generated match recaps (the one remaining "reports" item — match-level rather
+than player/team-level; would need a per-match cache key and likely a frontend
+matches page, which doesn't exist yet).
 
 ## 5. Tech stack & why
 
@@ -538,31 +563,52 @@ Four real issues surfaced while building this, each root-caused:
    `AppRequests` (the table Azure Monitor's request-span data lands in) has
    **zero rows total, ever**, while `AppTraces`, `AppDependencies`, and every
    other table are populated normally (confirmed via `search * | summarize
-   count() by $table` across the whole workspace). The FastAPI/ASGI OpenTelemetry
-   auto-instrumentation simply isn't producing request spans — likely
-   `RequestContextMiddleware`'s use of Starlette's `BaseHTTPMiddleware`
-   (`backend/app/middleware.py`) breaking OTel's ASGI context propagation for that
-   specific span, a documented compatibility issue, while logging/dependency
-   instrumentation (which don't need that context) work fine. Not fixed this
-   session — the dashboard doesn't need it, since it parses the equivalent data
-   out of `AppTraces`' structured log message instead (see below) — but flagged
-   as a real follow-up in `project_status.md`'s "Known limitations."
+   count() by $table` across the whole workspace). Root-caused and fixed in the
+   next slice of work (see below) — the `BaseHTTPMiddleware` theory that seemed
+   most plausible at the time turned out to be wrong.
 
-**Dashboard built on data that actually exists**: since `AppRequests` is empty,
-`infra/grafana/provisioning/dashboards/api-overview.json`'s 6 panels (total
-requests, avg latency, 5xx count, request rate over time, latency avg/p95, status
-code breakdown) query `AppTraces` instead, parsing the app's own structured
-request-log line (`middleware.py`'s `"request method=%s path=%s status=%s
-duration_ms=%.1f"`) via KQL's `parse` operator. Verified against real data
-spanning multiple sessions: 10,469 parsed requests, 10,422 `200`s, 47 `404`s
-(root-path platform probes), zero `5xx` — confirmed by running the actual panel
-queries through Grafana's `/api/ds/query`, not just checking the dashboard loads.
+**Dashboard built on data that actually exists**: at the time, `AppRequests` was
+empty, so `infra/grafana/provisioning/dashboards/api-overview.json`'s 6 panels
+(total requests, avg latency, 5xx count, request rate over time, latency
+avg/p95, status code breakdown) query `AppTraces` instead, parsing the app's own
+structured request-log line (`middleware.py`'s `"request method=%s path=%s
+status=%s duration_ms=%.1f"`) via KQL's `parse` operator. Verified against real
+data spanning multiple sessions: 10,469 parsed requests, 10,422 `200`s, 47
+`404`s (root-path platform probes), zero `5xx` — confirmed by running the
+actual panel queries through Grafana's `/api/ds/query`, not just checking the
+dashboard loads. Still works today even after the fix below — switching these
+panels to query `AppRequests` directly is optional cleanup, not required.
 
-**Still Phase 4**: fixing the FastAPI/ASGI request-span instrumentation gap
-(optional — the dashboard already works around it); automating the *deploy* half
-on merge (`terraform apply` still a deliberate manual step, same for the frontend
-build/upload); Sentry for frontend/backend error tracking; a Groq token-usage
-dashboard (cost/FinOps angle even though the API itself is free).
+**The FastAPI request-span gap is now fixed.** The real cause was a Python
+import-binding gotcha in `backend/app/main.py`, not `BaseHTTPMiddleware`:
+`from fastapi import FastAPI` at the top of the file binds the *original* class
+into that module's namespace at import time. `configure_azure_monitor()`'s
+"auto-instrumentation" for FastAPI works by later reassigning the `fastapi`
+module's `FastAPI` attribute to an instrumented subclass — but that reassignment
+can't retroactively update a name already bound elsewhere. So `app = FastAPI(...)`
+was silently constructing a plain, uninstrumented app the entire time, no error
+raised. Fixed by calling `FastAPIInstrumentor.instrument_app(app)` explicitly on
+the actual `app` instance right after creating it, sidestepping the import-order
+trap entirely. `RequestContextMiddleware`'s rewrite to pure ASGI (from the
+original, wrong hypothesis) was kept anyway — it's a legitimate, independently
+correct improvement, matching Starlette's own documented guidance, even though
+it turned out not to be the actual fix.
+
+Verified twice, not assumed: first locally by patching
+`AzureMonitorTraceExporter.export()` directly to print exactly what spans it
+receives (found a genuine `SpanKind.SERVER` span for `GET /health`, confirming
+the fix before any cloud round-trip), then by a real KQL query finding the exact
+test requests in `AppRequests` — the first rows that table has ever had. Shipped
+as `fifa26-api:v3` and re-verified against the actual deployed Container App:
+real traffic through the live URL, confirmed queryable with matching URLs,
+status codes, and durations.
+
+**Still Phase 4**: switching the Grafana dashboard from the `AppTraces` workaround
+to `AppRequests` directly (optional, the dashboard already works); automating the
+*deploy* half on merge (`terraform apply` still a deliberate manual step, same
+for the frontend build/upload); Sentry for frontend/backend error tracking; a
+Groq token-usage dashboard (cost/FinOps angle even though the API itself is
+free).
 
 ## 10. Status checklist
 
@@ -577,8 +623,9 @@ dashboard (cost/FinOps angle even though the API itself is free).
 - [x] Phase 2: ML models trained + served (rating regressor, outcome classifier,
       archetype clustering) + frontend what-if predictor, verified end-to-end
 - [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
-      limiting, player + team scouting reports, all live on Azure. Remaining:
-      NL→chart, match recaps (see §4.5)
+      limiting, player + team scouting reports, NL→chart backend (allowlisted
+      spec), all live on Azure. Remaining: chart rendering on the frontend, match
+      recaps (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
       Application Insights wiring, the real backend + frontend both deployed and
       verified live end-to-end, automated backend image build/push via GitHub

@@ -1,10 +1,10 @@
 # Project Status
 
-Last updated: 2026-08-02 (Grafana dashboard built and verified against real
-telemetry; found and worked around a genuine FastAPI/ASGI OpenTelemetry
-instrumentation gap along the way — see "Known limitations"). Update this file
-whenever a task completes or scope changes — it should always reflect what's
-actually working right now, not what's planned (that's `project_scope.md`).
+Last updated: 2026-08-02 (natural-language → chart backend built — a fixed
+allowlist of pre-written queries the LLM only ever selects by name, never
+generates SQL against; verified live with real Groq calls and real data). Update
+this file whenever a task completes or scope changes — it should always reflect
+what's actually working right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -171,10 +171,33 @@ actually working right now, not what's planned (that's `project_scope.md`).
   empty, as expected); the CASCADE-wipe fired again on `player_embeddings`/
   `team_embeddings` as documented, both regenerated against Azure and reverified
   (1248 players, 48 teams).
-- Not done yet: natural-language → chart, auto-generated match recaps (the last
-  remaining "scouting reports / match recaps" item — match-level rather than
-  player/team-level, would need a per-match cache key and likely a frontend matches
-  page, which doesn't exist yet) — see "Not started yet" below.
+- **Natural-language → chart** (`POST /charts/ask`, `GET /charts/catalog`,
+  `backend/app/routers/charts.py`): backend-only this session — frontend rendering
+  is a separate, later checkpoint. Constrained end to end, matching
+  `project_scope.md` §5's requirement exactly: `backend/genai/chart_specs.py`
+  defines a **fixed allowlist of 9 pre-written, parameter-free queries**
+  (`CHART_SPECS`, e.g. `top_scorers`, `team_points`, `goals_by_stage`). The LLM's
+  only job (`genai/llm.py`'s `classify_chart_template()`, using Groq's JSON mode —
+  `response_format={"type": "json_object"}` — for reliable structured output) is
+  to pick one allowlist **key by name**; it never generates or contributes to SQL
+  text. The router parses that JSON and validates the name against the real dict
+  — anything not an exact key (malformed JSON, a hallucinated name, `null` when
+  nothing fits) is rejected with a 422, never reaching the database. Shares the
+  same rate limiter as `/chat/*` and `/reports/*` (same cost-protection budget,
+  consistent with the rest of the GenAI surface).
+  Unit-tested (`backend/tests/test_charts.py`) including the actual security
+  property: a well-formed JSON response naming a template *outside* the allowlist
+  must still be rejected. Verified live against real Groq + the real database:
+  "who are the top goal scorers in the tournament?" → `top_scorers` with real
+  player names/goal counts; "which teams are winning the most in the league
+  table?" → `team_points`; "which teams have the best defense based on clean
+  sheets?" → `team_clean_sheets`; a deliberately off-topic question ("what is the
+  capital of France?") correctly got a 422, not a guess.
+- Not done yet: chart *rendering* on the frontend (next checkpoint), auto-generated
+  match recaps (the last remaining "scouting reports / match recaps" item —
+  match-level rather than player/team-level, would need a per-match cache key and
+  likely a frontend matches page, which doesn't exist yet) — see "Not started yet"
+  below.
 
 ### CI/CD (Phase 4, first slice)
 - `.github/workflows/ci.yml`: lint + test on every push to `main`/`master` and every
@@ -434,16 +457,13 @@ actually working right now, not what's planned (that's `project_scope.md`).
      **zero rows, total, ever** — not delayed, genuinely empty — while `AppTraces`
      (10,491 rows), `AppDependencies` (2,206), and every other Azure Monitor table
      are populated normally. Confirmed via `search * | summarize count() by
-     $table` across the whole workspace. **Root cause**: the FastAPI/ASGI
-     OpenTelemetry auto-instrumentation isn't producing request spans at all —
-     likely `RequestContextMiddleware`'s use of Starlette's `BaseHTTPMiddleware`
-     (`backend/app/middleware.py`), a documented compatibility issue where that
-     middleware wrapper can break OpenTelemetry's ASGI context propagation for the
-     request span specifically, while leaving logging- and dependency-level
-     instrumentation (which don't need that same span context) working fine. Not
-     fixed this session — flagged as a real, separate follow-up (see "Known
-     limitations" below) rather than chased further, since the dashboard task
-     itself doesn't need `AppRequests` to succeed.
+     $table` across the whole workspace. The FastAPI/ASGI OpenTelemetry
+     auto-instrumentation wasn't producing request spans at all. Not chased
+     further in this slice of work, since the dashboard doesn't need
+     `AppRequests` to succeed — genuinely root-caused and fixed in the very next
+     session slice below ("FastAPI request-span instrumentation fix"), which
+     found the real cause was different from the `BaseHTTPMiddleware` theory
+     that seemed most likely at the time.
 - **Dashboard built on data that actually exists**: `AppTraces` already captures
   every request via the app's own structured log line
   (`backend/app/middleware.py`'s `"request method=%s path=%s status=%s
@@ -471,6 +491,47 @@ actually working right now, not what's planned (that's `project_scope.md`).
   and got back the real counts above, not empty frames.
 - Dashboard: https://ca-fifa26-dev-grafana.livelyground-6362aca7.eastus.azurecontainerapps.io/d/fifa26-api-overview/fifa-26-api-overview
   (admin credentials in Key Vault / `infra/.env.secrets`, not committed).
+
+### FastAPI request-span instrumentation fix (Phase 4, seventh slice)
+- **The real root cause was different from what last session's investigation
+  concluded.** The `BaseHTTPMiddleware`/ASGI-context-propagation theory was a
+  reasonable, well-documented hypothesis — but rewriting `RequestContextMiddleware`
+  as pure ASGI middleware (`backend/app/middleware.py`) and re-testing showed the
+  same result: still zero request spans. The actual cause was a classic Python
+  import-binding gotcha in `backend/app/main.py`: `from fastapi import FastAPI` at
+  the top of the file binds the *original*, unpatched class into that module's
+  namespace at import time. `configure_azure_monitor()`'s FastAPI
+  auto-instrumentation works by later reassigning the `fastapi` module's `FastAPI`
+  attribute to an instrumented subclass — but reassigning `fastapi.FastAPI`
+  doesn't retroactively update a name `main.py` already bound elsewhere. So
+  `app = FastAPI(...)` was silently building a plain, uninstrumented app the
+  entire time, no error, just no request span, ever.
+- **Fix**: explicitly call `FastAPIInstrumentor.instrument_app(app)` on the actual
+  `app` object right after constructing it, instead of relying on the global
+  "patch the class, hope every future instance picks it up" auto-instrumentation
+  trick. This sidesteps the import-order trap entirely by instrumenting the
+  concrete instance directly. The `RequestContextMiddleware` rewrite to pure ASGI
+  (from the earlier hypothesis) was kept — it's a legitimate, independently
+  correct improvement (matches Starlette's own documented guidance for avoiding
+  `BaseHTTPMiddleware`'s context-propagation limitations) even though it wasn't
+  the actual fix.
+- **Debugging approach**: rather than trust cloud ingestion timing again after
+  last session got burned by it, verified locally and directly at each step —
+  first via a console span exporter (initially gave a false negative due to a
+  disconnected tracer provider, a red herring), then definitively by patching
+  `AzureMonitorTraceExporter.export()` itself to print exactly what spans it
+  receives. That showed a genuine `SpanKind.SERVER` span for `GET /health` with
+  full HTTP attributes, proving the fix before waiting on any cloud round-trip.
+- **Verified for real, twice**: locally (a real KQL query against Log Analytics
+  found the exact 3 test requests in `AppRequests` — the first rows that table
+  has ever had in this project's history) and then again against the actual
+  deployed Container App after shipping `fifa26-api:v3` — real traffic through
+  the live URL, confirmed queryable in `AppRequests` with matching URLs, status
+  codes, and durations.
+- **Not done**: switching the Grafana dashboard's panels from the `AppTraces`
+  workaround back to querying `AppRequests` directly — the current dashboard
+  already works correctly, so this is optional cleanup, not a fix, for a future
+  session.
 
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
@@ -551,19 +612,21 @@ actually working right now, not what's planned (that's `project_scope.md`).
 ## Not started yet
 
 - **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
-  rate limiting, auto-generated/cached scouting reports (player and team), and a
-  frontend chat UI are all built (see above) — the core RAG feature works end-to-end,
-  backend and frontend, answers both player- and team-level questions, with a real
-  usage safety net. Still unbuilt: natural-language → chart, auto-generated match
-  recaps (the one remaining "reports" item — match-level, not player/team-level).
+  rate limiting, auto-generated/cached scouting reports (player and team), a
+  frontend chat UI, and the natural-language → chart backend (allowlisted spec,
+  see above) are all built — the core RAG feature works end-to-end, backend and
+  frontend, answers both player- and team-level questions, with a real usage
+  safety net. Still unbuilt: chart *rendering* on the frontend, auto-generated
+  match recaps (the one remaining "reports" item — match-level, not
+  player/team-level).
 - **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
   the real FastAPI backend, the real Next.js frontend, automated build/push of the
-  backend image on every merge (via GitHub Actions OIDC), and a working Grafana
-  dashboard on real telemetry (see above) are all built. Still unbuilt: fixing the
-  FastAPI/ASGI request-span instrumentation gap (`AppRequests` empty — see "Known
-  limitations"), automating the *deploy* half of CI/CD (`TF_VAR_api_image` +
-  `terraform apply` on merge — still a deliberate manual step), automating the
-  frontend build/upload the same way, Sentry, load testing.
+  backend image on every merge (via GitHub Actions OIDC), a working Grafana
+  dashboard on real telemetry, and correct FastAPI request-span instrumentation
+  (`AppRequests` now populates for real) are all built. Still unbuilt: automating
+  the *deploy* half of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge —
+  still a deliberate manual step), automating the frontend build/upload the same
+  way, Sentry, load testing.
 
 ## Known limitations / honest caveats
 
@@ -571,15 +634,3 @@ actually working right now, not what's planned (that's `project_scope.md`).
   called out rather than hidden, and shapes what claims the ML section can honestly make.
 - No integration tests against a real Postgres yet (only mocked-DB unit tests).
 - No authentication anywhere (out of scope — see `project_scope.md`).
-- **`AppRequests` (the Azure Monitor request-span table) is genuinely empty** —
-  the FastAPI/ASGI OpenTelemetry auto-instrumentation isn't producing request
-  spans, likely because `RequestContextMiddleware`'s use of Starlette's
-  `BaseHTTPMiddleware` breaks OTel's ASGI context propagation (a documented
-  compatibility issue). Logging- and dependency-level telemetry (`AppTraces`,
-  `AppDependencies`) work fine and don't depend on that span. The Grafana
-  dashboard works around this by parsing the structured request log line out of
-  `AppTraces` instead — real data, just via a workaround rather than the
-  "intended" OpenTelemetry request-span path. Worth fixing properly later (likely
-  either dropping `BaseHTTPMiddleware` for a pure ASGI middleware, or explicit
-  span handling), not attempted this session since it was found while building
-  something else and is a genuinely separate piece of work.

@@ -46,6 +46,13 @@ TEAM_REPORT_SYSTEM_PROMPT = (
     "points."
 )
 
+CHART_INTENT_SYSTEM_PROMPT = (
+    "You match a user's question about a FIFA World Cup 2026 dataset to the single "
+    'best-fitting chart template below. Respond ONLY with JSON: {"template": "<name>"} '
+    'using one of the exact template names given, or {"template": null} if nothing '
+    "reasonably fits. Never invent a template name that isn't in the list."
+)
+
 _client = None
 
 
@@ -60,7 +67,13 @@ def _get_groq_client():
     return _client
 
 
-def _complete(system_prompt: str, user_content: str, *, max_tokens: int) -> str:
+def _complete(
+    system_prompt: str,
+    user_content: str,
+    *,
+    max_tokens: int,
+    response_format: dict | None = None,
+) -> str:
     client = _get_groq_client()
 
     start = time.perf_counter()
@@ -72,6 +85,7 @@ def _complete(system_prompt: str, user_content: str, *, max_tokens: int) -> str:
         ],
         temperature=0.2,
         max_tokens=max_tokens,
+        **({"response_format": response_format} if response_format else {}),
     )
     duration_ms = (time.perf_counter() - start) * 1000
 
@@ -138,4 +152,21 @@ def generate_team_report(summary: str, recent_matches: list[dict]) -> str:
         TEAM_REPORT_SYSTEM_PROMPT,
         f"Season summary:\n{summary}\n\nMost recent matches:\n{match_lines}",
         max_tokens=500,
+    )
+
+
+def classify_chart_template(question: str, catalog: str) -> str:
+    """Returns raw JSON text like `{"template": "top_scorers"}` -- this function's only
+    job is talking to Groq, same as generate_answer()/generate_*_report() above. It has
+    no idea what a "template" actually maps to; parsing the JSON and checking the name
+    against the real allowlist (genai/chart_specs.py) happens in the router, keeping
+    "can this model call an LLM" separate from "is this LLM output safe to act on."
+    Uses response_format={"type": "json_object"} (Groq's OpenAI-compatible JSON mode)
+    for reliable structured output instead of parsing free-form text.
+    """
+    return _complete(
+        CHART_INTENT_SYSTEM_PROMPT,
+        f"Available templates:\n{catalog}\n\nQuestion: {question}",
+        max_tokens=50,
+        response_format={"type": "json_object"},
     )
