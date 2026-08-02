@@ -1,10 +1,10 @@
 # Project Status
 
-Last updated: 2026-07-31 (Grafana's Azure Monitor datasource connected and
-verified via managed identity — checkpoint 1 of the observability dashboarding
-task; dashboard panels are the next checkpoint). Update this file whenever a task
-completes or scope changes — it should always reflect what's actually working
-right now, not what's planned (that's `project_scope.md`).
+Last updated: 2026-08-02 (Grafana dashboard built and verified against real
+telemetry; found and worked around a genuine FastAPI/ASGI OpenTelemetry
+instrumentation gap along the way — see "Known limitations"). Update this file
+whenever a task completes or scope changes — it should always reflect what's
+actually working right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -385,7 +385,7 @@ right now, not what's planned (that's `project_scope.md`).
   relied on the user manually copy-pasting error text out of the browser) — sped up
   the last two fix-verify cycles considerably.
 
-### Observability dashboarding (Phase 4, sixth slice — checkpoint 1 of 2)
+### Observability dashboarding (Phase 4, sixth slice)
 - **Grafana (`ca-fifa26-dev-grafana`, provisioned since the very first Terraform
   apply) is finally configured**, not just running an untouched stock image. Scope
   deliberately limited to this checkpoint: get the Azure Monitor datasource
@@ -428,23 +428,49 @@ right now, not what's planned (that's `project_scope.md`).
      `requests`/`traces` are aliases that only exist in the App Insights resource's
      own query surface, not the workspace itself.
   3. Fresh traffic generated against the live API to verify real data flowing
-     through took noticeably longer to become queryable than expected — cross-
-     checked directly against `az monitor app-insights query` (the same tool used
-     successfully in earlier sessions) and got the identical `0` result at the same
-     moment, confirming this was genuine Azure-side Log Analytics ingestion lag
-     affecting *both* query surfaces equally, not a defect in the new Grafana
-     wiring. Container logs independently confirmed the OpenTelemetry exporter's
-     `Transmission succeeded: Item received: 8. Items accepted: 8` for the fresh
-     requests, so the data was genuinely in flight — the wait was purely
-     Azure-side indexing catching up, the same "eventual consistency" behavior
-     already documented from the original Application Insights verification.
-- **Verified**: `/api/datasources/uid/.../health` → `"Successfully connected to all
-  Azure Monitor endpoints"`; a real KQL query against `AppRequests` executed
-  successfully end-to-end (status 200, correct schema) once the table name was
-  corrected — confirming the full auth + query pipeline works, independent of
-  whether any specific time window has data in it yet.
-- **Not done yet**: actual dashboard panels (request rate, latency, error rate) —
-  next checkpoint. `infra/grafana/provisioning/dashboards/` doesn't exist yet.
+     through stayed at `0` far longer than "eventual consistency" could explain —
+     initially assumed to be ingestion lag (last session's note), but this
+     session's dashboard-building work found the real cause: `AppRequests` has
+     **zero rows, total, ever** — not delayed, genuinely empty — while `AppTraces`
+     (10,491 rows), `AppDependencies` (2,206), and every other Azure Monitor table
+     are populated normally. Confirmed via `search * | summarize count() by
+     $table` across the whole workspace. **Root cause**: the FastAPI/ASGI
+     OpenTelemetry auto-instrumentation isn't producing request spans at all —
+     likely `RequestContextMiddleware`'s use of Starlette's `BaseHTTPMiddleware`
+     (`backend/app/middleware.py`), a documented compatibility issue where that
+     middleware wrapper can break OpenTelemetry's ASGI context propagation for the
+     request span specifically, while leaving logging- and dependency-level
+     instrumentation (which don't need that same span context) working fine. Not
+     fixed this session — flagged as a real, separate follow-up (see "Known
+     limitations" below) rather than chased further, since the dashboard task
+     itself doesn't need `AppRequests` to succeed.
+- **Dashboard built on data that actually exists**: `AppTraces` already captures
+  every request via the app's own structured log line
+  (`backend/app/middleware.py`'s `"request method=%s path=%s status=%s
+  duration_ms=%.1f"`), so the dashboard's KQL parses that message text
+  (`parse Message with "request method=" Method " path=" Path " status="
+  StatusCode:int " duration_ms=" DurationMs:double`) instead of depending on the
+  broken `AppRequests` path. Verified against real historical data spanning
+  multiple sessions: 10,469 total parsed requests, 10,422 `200`s, 47 `404`s
+  (root-path platform health probes), zero `5xx`.
+- **`infra/grafana/provisioning/dashboards/`**: `dashboards.yaml` (the provider
+  config, same "load from this folder" pattern as the datasource) +
+  `api-overview.json` — 6 panels (total requests, avg latency, 5xx count, request
+  rate over time, latency avg/p95 over time, status-code breakdown), each a real
+  KQL query against the workspace, `uid: fifa26-api-overview` pinned so the URL is
+  stable across redeploys. Shipped as `grafana-custom:v2`.
+- **Found and fixed one more real bug while building this**: the datasource's
+  `uid` was never pinned in `azure-monitor.yaml` — Grafana auto-generates a random
+  one on each fresh provisioning pass when none is set, and since this container
+  has no persistent disk, *every* scale-to-zero-and-back is a fresh pass. Left
+  unpinned, the very next cold start after checkpoint 1 would have silently broken
+  every panel referencing that datasource by UID. Fixed by adding `uid:
+  azuremonitor` before building the dashboard on top of it.
+- **Verified live, not just "provisioned without error"**: `/api/search` confirms
+  the dashboard is loaded; ran the actual panel queries through `/api/ds/query`
+  and got back the real counts above, not empty frames.
+- Dashboard: https://ca-fifa26-dev-grafana.livelyground-6362aca7.eastus.azurecontainerapps.io/d/fifa26-api-overview/fifa-26-api-overview
+  (admin credentials in Key Vault / `infra/.env.secrets`, not committed).
 
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
@@ -532,12 +558,12 @@ right now, not what's planned (that's `project_scope.md`).
   recaps (the one remaining "reports" item — match-level, not player/team-level).
 - **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
   the real FastAPI backend, the real Next.js frontend, automated build/push of the
-  backend image on every merge (via GitHub Actions OIDC), and Grafana's Azure
-  Monitor datasource (checkpoint 1 — connected and verified, see above) are all
-  built. Still unbuilt: actual Grafana dashboard panels (checkpoint 2), automating
-  the *deploy* half of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge —
-  still a deliberate manual step), automating the frontend build/upload the same
-  way, Sentry, load testing.
+  backend image on every merge (via GitHub Actions OIDC), and a working Grafana
+  dashboard on real telemetry (see above) are all built. Still unbuilt: fixing the
+  FastAPI/ASGI request-span instrumentation gap (`AppRequests` empty — see "Known
+  limitations"), automating the *deploy* half of CI/CD (`TF_VAR_api_image` +
+  `terraform apply` on merge — still a deliberate manual step), automating the
+  frontend build/upload the same way, Sentry, load testing.
 
 ## Known limitations / honest caveats
 
@@ -545,3 +571,15 @@ right now, not what's planned (that's `project_scope.md`).
   called out rather than hidden, and shapes what claims the ML section can honestly make.
 - No integration tests against a real Postgres yet (only mocked-DB unit tests).
 - No authentication anywhere (out of scope — see `project_scope.md`).
+- **`AppRequests` (the Azure Monitor request-span table) is genuinely empty** —
+  the FastAPI/ASGI OpenTelemetry auto-instrumentation isn't producing request
+  spans, likely because `RequestContextMiddleware`'s use of Starlette's
+  `BaseHTTPMiddleware` breaks OTel's ASGI context propagation (a documented
+  compatibility issue). Logging- and dependency-level telemetry (`AppTraces`,
+  `AppDependencies`) work fine and don't depend on that span. The Grafana
+  dashboard works around this by parsing the structured request log line out of
+  `AppTraces` instead — real data, just via a workaround rather than the
+  "intended" OpenTelemetry request-span path. Worth fixing properly later (likely
+  either dropping `BaseHTTPMiddleware` for a pure ASGI middleware, or explicit
+  span handling), not attempted this session since it was found while building
+  something else and is a genuinely separate piece of work.

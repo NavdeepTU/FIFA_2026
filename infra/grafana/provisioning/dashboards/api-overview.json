@@ -1,0 +1,146 @@
+{
+  "uid": "fifa26-api-overview",
+  "title": "FIFA 26 API Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "",
+  "time": { "from": "now-7d", "to": "now" },
+  "editable": true,
+  "annotations": { "list": [] },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total requests",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| count"
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Avg latency (ms)",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| summarize avg(DurationMs)"
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 1 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Server errors (5xx)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| where StatusCode >= 500\n| count"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Request rate",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| summarize RequestCount = count() by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc"
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": {}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Latency (avg / p95)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| summarize AvgDurationMs = avg(DurationMs), P95DurationMs = percentile(DurationMs, 95) by bin(TimeGenerated, 1h)\n| order by TimeGenerated asc"
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": {}
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Status code breakdown",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "grafana-azure-monitor-datasource", "uid": "azuremonitor" },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "resource": "/subscriptions/e1c9219c-b619-4508-b9ba-7898eb104d6f/resourceGroups/rg-fifa26-dev/providers/Microsoft.OperationalInsights/workspaces/log-fifa26-dev",
+            "query": "AppTraces\n| where Message has \"request method=\"\n| parse Message with \"request method=\" Method \" path=\" Path \" status=\" StatusCode:int \" duration_ms=\" DurationMs:double\n| summarize Count = count() by StatusCode = tostring(StatusCode)\n| order by StatusCode asc"
+          }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "displayMode": "gradient", "orientation": "horizontal" }
+    }
+  ]
+}

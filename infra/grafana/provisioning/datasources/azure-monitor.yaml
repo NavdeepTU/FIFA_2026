@@ -8,6 +8,11 @@ apiVersion: 1
 
 datasources:
   - name: Azure Monitor
+    # Pinned, not auto-generated -- without an explicit uid, Grafana assigns a random
+    # one on every fresh provisioning pass. Since this container has no persistent
+    # storage, every scale-to-zero-and-back is a fresh pass, so an unpinned uid would
+    # silently break any dashboard panel referencing it after the very next restart.
+    uid: azuremonitor
     type: grafana-azure-monitor-datasource
     access: proxy
     isDefault: true

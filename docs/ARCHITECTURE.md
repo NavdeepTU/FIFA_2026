@@ -505,43 +505,64 @@ Verified with an actual successful run, not just a clean `terraform apply`: all
 three CI jobs passed together, and the resulting commit-SHA-tagged image was
 confirmed present in ACR.
 
-**Grafana's Azure Monitor datasource is now genuinely connected** (checkpoint 1 of
-2 — dashboard panels are the next, separate checkpoint). The Grafana Container App
-(`ca-fifa26-dev-grafana`) has `min_replicas = 0` and no persistent disk, so any
-config set up by clicking around its own UI would be wiped on the next
-scale-to-zero cycle — used Grafana's "provisioning" feature instead (config files
-baked into a custom image, `infra/grafana/Dockerfile` + `infra/grafana/
-provisioning/`, built via `az acr build` the same way the backend image is) rather
-than a paid persistent-disk add-on. Authenticated via its own user-assigned
-managed identity (`id-fifa26-dev-grafana`, separate from the API's, scoped to only
+**Grafana now has a real, working dashboard on real telemetry**, not just an
+untouched stock image. The Grafana Container App (`ca-fifa26-dev-grafana`) has
+`min_replicas = 0` and no persistent disk, so any config set up by clicking around
+its own UI would be wiped on the next scale-to-zero cycle — used Grafana's
+"provisioning" feature instead (config files baked into a custom image,
+`infra/grafana/Dockerfile` + `infra/grafana/provisioning/`, built via
+`az acr build` the same way the backend image is) rather than a paid
+persistent-disk add-on. Authenticated via its own user-assigned managed identity
+(`id-fifa26-dev-grafana`, separate from the API's, scoped to only
 `Log Analytics Reader` + `Key Vault Secrets User` + `AcrPull`) — no client secret,
-no connection string.
+no connection string. Admin password generated and landed in Key Vault, same
+pattern as every other secret in this stack.
 
-Three real issues surfaced while verifying, each root-caused:
+Four real issues surfaced while building this, each root-caused:
 1. `azureAuthType: msi` in the datasource config alone wasn't enough — Grafana
    gates managed-identity auth behind a separate server-wide opt-in
    (`GF_AZURE_MANAGED_IDENTITY_ENABLED=true` + `GF_AZURE_MANAGED_IDENTITY_CLIENT_ID`
    for a user-assigned identity), confirmed from Grafana's own source rather than
    guessed.
 2. Querying the raw Log Analytics workspace directly (what Grafana's datasource
-   does) needs the underlying `AppRequests`/`AppTraces` table names, not the
+   does) needs the underlying `App*`-prefixed table names, not the
    `requests`/`traces` aliases that only exist in Application Insights' own query
    surface.
-3. Fresh telemetry took longer than expected to become queryable — cross-checked
-   against `az monitor app-insights query` (proven working in earlier sessions)
-   and got the identical `0` at the same moment, confirming genuine Azure-side
-   ingestion lag affecting both query surfaces equally, not a defect in the new
-   wiring; container logs independently confirmed the exporter's transmissions
-   were being accepted the whole time.
+3. The datasource's `uid` was never pinned, so Grafana would assign a new random
+   one on every fresh provisioning pass — and since there's no persistent disk,
+   *every* scale-to-zero-and-back is a fresh pass. Left unpinned, the next cold
+   start would have silently broken any dashboard panel referencing it. Fixed
+   before building the dashboard on top of it (`uid: azuremonitor`).
+4. **A genuinely deeper finding**: what looked like "eventual consistency lag" in
+   the previous session turned out to be a real bug once actually chased down —
+   `AppRequests` (the table Azure Monitor's request-span data lands in) has
+   **zero rows total, ever**, while `AppTraces`, `AppDependencies`, and every
+   other table are populated normally (confirmed via `search * | summarize
+   count() by $table` across the whole workspace). The FastAPI/ASGI OpenTelemetry
+   auto-instrumentation simply isn't producing request spans — likely
+   `RequestContextMiddleware`'s use of Starlette's `BaseHTTPMiddleware`
+   (`backend/app/middleware.py`) breaking OTel's ASGI context propagation for that
+   specific span, a documented compatibility issue, while logging/dependency
+   instrumentation (which don't need that context) work fine. Not fixed this
+   session — the dashboard doesn't need it, since it parses the equivalent data
+   out of `AppTraces`' structured log message instead (see below) — but flagged
+   as a real follow-up in `project_status.md`'s "Known limitations."
 
-Verified: the datasource health check reports success against all three Azure
-Monitor endpoints, and a real KQL query executes end-to-end (correct schema,
-`200`) once pointed at the right table names.
+**Dashboard built on data that actually exists**: since `AppRequests` is empty,
+`infra/grafana/provisioning/dashboards/api-overview.json`'s 6 panels (total
+requests, avg latency, 5xx count, request rate over time, latency avg/p95, status
+code breakdown) query `AppTraces` instead, parsing the app's own structured
+request-log line (`middleware.py`'s `"request method=%s path=%s status=%s
+duration_ms=%.1f"`) via KQL's `parse` operator. Verified against real data
+spanning multiple sessions: 10,469 parsed requests, 10,422 `200`s, 47 `404`s
+(root-path platform probes), zero `5xx` — confirmed by running the actual panel
+queries through Grafana's `/api/ds/query`, not just checking the dashboard loads.
 
-**Still Phase 4**: actual Grafana dashboard panels (checkpoint 2); automating the
-*deploy* half on merge (`terraform apply` still a deliberate manual step, same for
-the frontend build/upload); Sentry for frontend/backend error tracking; a Groq
-token-usage dashboard (cost/FinOps angle even though the API itself is free).
+**Still Phase 4**: fixing the FastAPI/ASGI request-span instrumentation gap
+(optional — the dashboard already works around it); automating the *deploy* half
+on merge (`terraform apply` still a deliberate manual step, same for the frontend
+build/upload); Sentry for frontend/backend error tracking; a Groq token-usage
+dashboard (cost/FinOps angle even though the API itself is free).
 
 ## 10. Status checklist
 
@@ -561,6 +582,6 @@ token-usage dashboard (cost/FinOps angle even though the API itself is free).
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
       Application Insights wiring, the real backend + frontend both deployed and
       verified live end-to-end, automated backend image build/push via GitHub
-      Actions OIDC, and Grafana's Azure Monitor datasource (checkpoint 1 of 2, see
-      §9) are all built; Grafana dashboard panels (checkpoint 2), automating the
-      deploy half on merge, `terraform apply` on merge, and Sentry not yet
+      Actions OIDC, and a working Grafana dashboard on real telemetry (see §9) are
+      all built; automating the deploy half on merge, `terraform apply` on merge,
+      and Sentry not yet

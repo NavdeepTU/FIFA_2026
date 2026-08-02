@@ -7,7 +7,7 @@ variable "api_image" {
 variable "grafana_image" {
   description = "Custom image built from infra/grafana/Dockerfile (bakes in datasource provisioning). Overridden via TF_VAR_grafana_image after each manual build/push, same pattern as var.api_image -- the default here is the source of truth for what's actually live."
   type        = string
-  default     = "acrfifa26dev6q3jm1.azurecr.io/grafana-custom:v1"
+  default     = "acrfifa26dev6q3jm1.azurecr.io/grafana-custom:v2"
 }
 
 # Azure Monitor's free monthly data ingestion allowance (5GB) comfortably covers a
