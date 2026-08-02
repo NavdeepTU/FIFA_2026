@@ -191,6 +191,35 @@ export async function getTeamReport(teamName: string): Promise<TeamScoutingRepor
 export const generateTeamReport = (teamName: string) =>
   apiPost<TeamScoutingReport>(`/reports/teams/${encodeURIComponent(teamName)}`, {});
 
+export type ChartDataPoint = {
+  label: string;
+  value: number | null;
+};
+
+export type ChartAskResponse = {
+  template: string;
+  chart_type: string;
+  title: string;
+  data: ChartDataPoint[];
+};
+
+export async function askChart(query: string): Promise<ChartAskResponse> {
+  const res = await fetch(`${API_BASE_URL}/charts/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  // Unlike apiPost, this reads the body on failure too -- a 422 here comes with a
+  // real, useful `detail` message ("Couldn't match that question...") from the
+  // allowlist rejection, worth showing directly rather than a generic error.
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    const detail = body && typeof body.detail === "string" ? body.detail : `API /charts/ask failed: ${res.status}`;
+    throw new Error(detail);
+  }
+  return body as ChartAskResponse;
+}
+
 export const getMatches = (stage?: string, team?: string) => {
   const params = new URLSearchParams();
   if (stage) params.set("stage", stage);

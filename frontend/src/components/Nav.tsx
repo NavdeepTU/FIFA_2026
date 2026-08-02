@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/teams", label: "Teams" },
   { href: "/predict", label: "Predictor" },
   { href: "/chat", label: "Ask" },
+  { href: "/charts", label: "Charts" },
 ];
 
 export function Nav() {

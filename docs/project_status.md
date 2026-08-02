@@ -1,10 +1,11 @@
 # Project Status
 
-Last updated: 2026-08-02 (natural-language → chart backend built — a fixed
-allowlist of pre-written queries the LLM only ever selects by name, never
-generates SQL against; verified live with real Groq calls and real data). Update
-this file whenever a task completes or scope changes — it should always reflect
-what's actually working right now, not what's planned (that's `project_scope.md`).
+Last updated: 2026-08-02 (natural-language → chart feature completed end to end —
+frontend rendering shipped on top of the backend allowlist built earlier the same
+day; verified live with a real Groq call, real chart data, and a real browser
+page load). Update this file whenever a task completes or scope changes — it
+should always reflect what's actually working right now, not what's planned
+(that's `project_scope.md`).
 
 ## Done and verified
 
@@ -53,7 +54,7 @@ what's actually working right now, not what's planned (that's `project_scope.md`
 ### Frontend (Next.js 16)
 - Pages: overview (`/`), player leaderboard + profile (`/players`, `/players/[id]`),
   team standings + profile (`/teams`, `/teams/[team]`), live rating predictor (`/predict`),
-  chat assistant (`/chat`).
+  chat assistant (`/chat`), natural-language chart builder (`/charts`).
 - Chat page: chat-bubble UI (user messages right-aligned, assistant answers left with
   source player chips underneath), example prompt suggestions for an empty chat,
   animated "thinking" indicator while waiting on Groq, calls `POST /chat/ask`.
@@ -193,11 +194,41 @@ what's actually working right now, not what's planned (that's `project_scope.md`
   table?" → `team_points`; "which teams have the best defense based on clean
   sheets?" → `team_clean_sheets`; a deliberately off-topic question ("what is the
   capital of France?") correctly got a 422, not a guess.
-- Not done yet: chart *rendering* on the frontend (next checkpoint), auto-generated
-  match recaps (the last remaining "scouting reports / match recaps" item —
-  match-level rather than player/team-level, would need a per-match cache key and
-  likely a frontend matches page, which doesn't exist yet) — see "Not started yet"
-  below.
+- **Frontend rendering** (`frontend/src/app/charts/page.tsx`, new `/charts` nav
+  entry): a `"use client"` page mirroring `/chat`'s input/loading/result pattern —
+  example-prompt buttons, a text input, and the result rendered via the existing
+  `BarChartCard` component (reused as-is, no new chart component needed since
+  every template is `chart_type: "bar"`). `askChart()` added to `lib/api.ts`
+  as a bespoke fetch wrapper (not the shared `apiPost` helper) because a 422
+  rejection from the allowlist carries a real, user-facing `detail` message
+  ("couldn't match that question...") worth surfacing directly rather than
+  hiding behind a generic error. `ChartDataPoint.value` is `number | null` from
+  the API (a stat can legitimately be absent for a given row) but `BarChartCard`'s
+  recharts data expects `string | number` — mapped `null → 0` at the page level
+  rather than loosening the shared chart component's type for one caller.
+  **Required rebuilding and redeploying the backend image** (`fifa26-api:v4` via
+  `az acr build` + `terraform apply`) — the previously-deployed `v3` image
+  predated the charts backend work, confirmed via a live `404` on
+  `/charts/catalog` before the redeploy, `200` after.
+  Verified live end-to-end in a real browser: page loads, an example prompt
+  ("who scored the most goals?") returns real ranked player data rendered as a
+  bar chart, and an off-topic question correctly surfaces the backend's 422
+  message instead of a chart. Live at
+  https://stfifa266q3jm1.z13.web.core.windows.net/charts/.
+- **Deploy tooling note discovered while shipping this**: `az storage blob
+  upload-batch` (used for every prior frontend deploy) stalled badly on this
+  export's ~11.7k files — only ~1,800 uploaded in 34 minutes before basically
+  flatlining. Switched to `azcopy sync` (installed via `brew install azcopy`,
+  authenticated with an account-key-derived SAS token since the logged-in CLI
+  identity lacks the data-plane RBAC role `azcopy`'s `--auth-mode login` needs)
+  — finished the same 9,869-file transfer in 2 minutes with zero failures.
+  `az storage blob upload-batch` is fine for a few hundred files; `azcopy sync`
+  is the right tool once a static export grows this large (driven by the
+  per-player/per-team static pages).
+- Not done yet: auto-generated match recaps (the last remaining "scouting
+  reports / match recaps" item — match-level rather than player/team-level,
+  would need a per-match cache key and likely a frontend matches page, which
+  doesn't exist yet) — see "Not started yet" below.
 
 ### CI/CD (Phase 4, first slice)
 - `.github/workflows/ci.yml`: lint + test on every push to `main`/`master` and every
@@ -613,12 +644,12 @@ what's actually working right now, not what's planned (that's `project_scope.md`
 
 - **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
   rate limiting, auto-generated/cached scouting reports (player and team), a
-  frontend chat UI, and the natural-language → chart backend (allowlisted spec,
-  see above) are all built — the core RAG feature works end-to-end, backend and
-  frontend, answers both player- and team-level questions, with a real usage
-  safety net. Still unbuilt: chart *rendering* on the frontend, auto-generated
-  match recaps (the one remaining "reports" item — match-level, not
-  player/team-level).
+  frontend chat UI, and the natural-language → chart feature (allowlisted
+  backend spec + frontend rendering, see above) are all built — the core RAG
+  feature works end-to-end, backend and frontend, answers both player- and
+  team-level questions, with a real usage safety net. Still unbuilt:
+  auto-generated match recaps (the one remaining "reports" item — match-level,
+  not player/team-level).
 - **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
   the real FastAPI backend, the real Next.js frontend, automated build/push of the
   backend image on every merge (via GitHub Actions OIDC), a working Grafana

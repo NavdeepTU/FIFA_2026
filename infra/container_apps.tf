@@ -1,7 +1,7 @@
 variable "api_image" {
   description = "Overridden via TF_VAR_api_image after each manual build/push (az acr build); until CI automates this, the default here is the source of truth for 'what's actually live' so a plain `terraform apply` can't silently roll the deployment back to an older image."
   type        = string
-  default     = "acrfifa26dev6q3jm1.azurecr.io/fifa26-api:v3"
+  default     = "acrfifa26dev6q3jm1.azurecr.io/fifa26-api:v4"
 }
 
 variable "grafana_image" {
