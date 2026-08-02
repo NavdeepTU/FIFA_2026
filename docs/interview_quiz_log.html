@@ -67,10 +67,121 @@
   <nav class="toc">
     <h2>Entries</h2>
     <ol id="toc-list">
+      <li><a href="#entry-2026-08-02-infra-budget-tf">infra/budget.tf</a> <span class="meta">— 2026-08-02</span></li>
       <li><a href="#entry-2026-08-02-etl-load-py">etl/load.py</a> <span class="meta">— 2026-08-02</span></li>
     </ol>
   </nav>
   <div id="entries">
+    <article class="entry" id="entry-2026-08-02-infra-budget-tf">
+      <header>
+        <h2>infra/budget.tf</h2>
+        <div class="meta">2026-08-02</div>
+      </header>
+
+      <section class="block sec-what">
+        <h3>What it is</h3>
+        <p>
+          <code>infra/budget.tf</code> sets up a real dollar spending cap for this
+          project's Azure account. It's part of the Terraform setup that builds all the
+          cloud infrastructure, and it works by watching actual spending and emailing an
+          alert as it gets close to the limit — currently $10/month.
+        </p>
+      </section>
+
+      <section class="block sec-how">
+        <h3>How it's implemented</h3>
+        <p>
+          It creates one Azure Budget attached to the whole resource group, so it tracks
+          total spend across everything in the project — database, backend hosting,
+          storage, all of it. It sends three separate warning emails: one once you've
+          actually spent 50% of the budget, another at 80% actually spent, and a third if
+          Azure predicts you're on track to hit 100%, even before you actually get there.
+          The dollar amount and the alert email are both set through variables rather than
+          hardcoded, and a small rule tells Terraform to ignore a date field Azure updates
+          on its own every month, so that doesn't look like an unwanted change.
+        </p>
+      </section>
+
+      <section class="block sec-arch">
+        <h3>Architecture visualization</h3>
+        <div class="mermaid">
+flowchart LR
+  classDef frontend fill:#38bdf8,stroke:#0369a1,color:#0f172a;
+  classDef backend fill:#a78bfa,stroke:#5b21b6,color:#0f172a;
+  classDef ml fill:#fbbf24,stroke:#92400e,color:#0f172a;
+  classDef data fill:#34d399,stroke:#065f46,color:#0f172a;
+  classDef infra fill:#fb923c,stroke:#9a3412,color:#0f172a;
+  classDef external fill:#f87171,stroke:#7f1d1d,color:#0f172a;
+  classDef target fill:#2dd4bf,stroke:#134e4a,color:#0f172a,stroke-width:3px;
+
+  PG["Database (Postgres)"]:::infra
+  CA["Backend hosting<br/>(Container Apps)"]:::infra
+  Storage["File storage (Blob)"]:::infra
+  RG["Everything lives in one<br/>Azure resource group"]:::infra
+  Budget["infra/budget.tf<br/>watches total spend"]:::target
+  Email["Alert email"]:::external
+
+  PG --> RG
+  CA --> RG
+  Storage --> RG
+  RG --> Budget
+  Budget -->|50%, 80%, predicted 100%| Email
+        </div>
+      </section>
+
+      <section class="block sec-concept">
+        <h3>Concept(s) it demonstrates</h3>
+        <p>
+          <strong>Infrastructure as Code</strong> — describing cloud setup in a
+          version-controlled text file instead of clicking through a web console. And a
+          <strong>cost guardrail</strong> — an automatic safety check that catches an
+          expensive mistake (like an accidentally oversized resource) before it turns
+          into a surprise bill.
+        </p>
+      </section>
+
+      <section class="block sec-why">
+        <h3>Why this approach, and what else was considered</h3>
+        <p>
+          A real spend-cap alert was added on top of picking small, free-tier-sized
+          resources, because careful sizing alone can't catch every mistake — the
+          project's own docs call this "the real backstop, not just careful sizing."
+          Relying only on free-tier resource choices is simpler to set up, but gives no
+          warning if something ever gets misconfigured to cost more than expected.
+        </p>
+      </section>
+
+      <section class="block sec-better">
+        <h3>What could be better next time</h3>
+        <p>
+          The alerts are informational only — they send a warning email but can't
+          automatically pause or shut anything down, so a person still has to notice and
+          react before costs keep climbing.
+        </p>
+      </section>
+
+      <section class="block sec-questions">
+        <h3>Likely interview questions</h3>
+        <ol>
+          <li>
+            <strong>"Why three separate alert thresholds instead of one?"</strong> —
+            early warnings at 50%/80% actual spend give time to react, while the 100%
+            alert fires off a forecast, catching a problem before it actually happens.
+          </li>
+          <li>
+            <strong>"What does the lifecycle rule do here?"</strong> — it tells Terraform
+            to ignore Azure's automatic monthly date rollover on the budget period, so
+            that doesn't get flagged as a change to undo.
+          </li>
+          <li>
+            <strong>"Why attach the budget to the whole resource group instead of one
+            resource?"</strong> — a cost overrun could come from any resource, so
+            watching the group as a whole catches surprises the author didn't
+            specifically plan for.
+          </li>
+        </ol>
+      </section>
+    </article>
     <article class="entry" id="entry-2026-08-02-etl-load-py">
       <header>
         <h2>etl/load.py</h2>
