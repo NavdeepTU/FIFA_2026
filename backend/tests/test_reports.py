@@ -210,3 +210,108 @@ def test_generate_team_report_returns_503_when_generation_fails(make_client, mon
     client = make_client([[TEAM_PROFILE_ROW], TEAM_MATCH_ROWS])
     resp = client.post("/reports/teams/France")
     assert resp.status_code == 503
+
+
+MATCH_ROW = {
+    "match_id": "M00001",
+    "match_date": "2026-06-11",
+    "stadium": "MetLife Stadium",
+    "city": "East Rutherford",
+    "tournament_stage": "Group Stage",
+    "team_a": "France",
+    "team_b": "Brazil",
+    "goals_a": 2,
+    "goals_b": 1,
+}
+
+MATCH_PERFORMERS = [
+    {
+        "player_name": "Kylian Mbappe",
+        "team": "France",
+        "goals": 2,
+        "assists": 0,
+        "player_rating": 8.9,
+        "yellow_cards": 0,
+        "red_cards": 0,
+    }
+]
+
+CACHED_MATCH_REPORT_ROW = {
+    "match_id": "M00001",
+    "team_a": "France",
+    "team_b": "Brazil",
+    "report_text": "France edged past Brazil in a tense group-stage clash ...",
+    "generated_at": "2026-07-30T12:00:00+00:00",
+}
+
+
+def test_get_cached_match_report_404_when_none_exists(make_client):
+    client = make_client([[]])
+    resp = client.get("/reports/matches/M00001")
+    assert resp.status_code == 404
+
+
+def test_get_cached_match_report_returns_existing(make_client):
+    client = make_client([[CACHED_MATCH_REPORT_ROW]])
+    resp = client.get("/reports/matches/M00001")
+    assert resp.status_code == 200
+    assert resp.json()["report_text"] == CACHED_MATCH_REPORT_ROW["report_text"]
+
+
+def test_generate_match_report_404_when_match_not_found(make_client):
+    client = make_client([[]])
+    resp = client.post("/reports/matches/M99999")
+    assert resp.status_code == 404
+
+
+def test_generate_match_report_success(make_client, monkeypatch):
+    captured = {}
+
+    def fake_generate_match_report(summary):
+        captured["summary"] = summary
+        return "France edged past Brazil in a tense group-stage clash."
+
+    monkeypatch.setattr(reports_router, "generate_match_report", fake_generate_match_report)
+
+    inserted_row = {
+        "match_id": "M00001",
+        "report_text": "France edged past Brazil in a tense group-stage clash.",
+        "generated_at": "2026-07-30T12:00:00+00:00",
+    }
+    client = make_client([[MATCH_ROW], MATCH_PERFORMERS, [inserted_row]])
+    resp = client.post("/reports/matches/M00001")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["match_id"] == "M00001"
+    assert body["team_a"] == "France"
+    assert body["team_b"] == "Brazil"
+    assert "tense group-stage clash" in body["report_text"]
+    assert "France 2-1 Brazil" in captured["summary"]
+
+
+def test_generate_match_report_returns_503_when_generation_fails(make_client, monkeypatch):
+    def _raise(_summary):
+        raise RuntimeError("GROQ_API_KEY is not set")
+
+    monkeypatch.setattr(reports_router, "generate_match_report", _raise)
+    client = make_client([[MATCH_ROW], MATCH_PERFORMERS])
+    resp = client.post("/reports/matches/M00001")
+    assert resp.status_code == 503
+
+
+def test_generate_match_report_rate_limits_after_max_requests(make_client, monkeypatch):
+    monkeypatch.setattr(reports_router, "generate_match_report", lambda s: "report")
+    inserted_row = {
+        "match_id": "M00001",
+        "report_text": "report",
+        "generated_at": "2026-07-30T12:00:00+00:00",
+    }
+    responses = [[MATCH_ROW], MATCH_PERFORMERS, [inserted_row]] * MAX_REQUESTS_PER_WINDOW
+    client = make_client(responses)
+
+    for _ in range(MAX_REQUESTS_PER_WINDOW):
+        resp = client.post("/reports/matches/M00001")
+        assert resp.status_code == 200
+
+    resp = client.post("/reports/matches/M00001")
+    assert resp.status_code == 429

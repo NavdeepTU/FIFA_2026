@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from genai.embeddings import build_summary_text, build_team_summary_text
-from genai.llm import generate_player_report, generate_team_report
+from genai.embeddings import build_match_summary_text, build_summary_text, build_team_summary_text
+from genai.llm import generate_match_report, generate_player_report, generate_team_report
 from pydantic import BaseModel
 from sqlalchemy import Connection, text
 
@@ -21,6 +21,14 @@ class ScoutingReport(BaseModel):
 
 class TeamScoutingReport(BaseModel):
     team_name: str
+    report_text: str
+    generated_at: datetime
+
+
+class MatchReport(BaseModel):
+    match_id: str
+    team_a: str
+    team_b: str
     report_text: str
     generated_at: datetime
 
@@ -169,3 +177,81 @@ def generate_team_report_route(
     db.commit()
 
     return row
+
+
+def _fetch_match_context(match_id: str, db: Connection) -> dict | None:
+    match = db.execute(
+        text(
+            "select match_id, match_date, stadium, city, tournament_stage, "
+            "team_a, team_b, goals_a, goals_b from matches where match_id = :mid"
+        ),
+        {"mid": match_id},
+    ).mappings().first()
+    if not match:
+        return None
+
+    performers = db.execute(
+        text(
+            "select p.player_name, s.team, s.goals, s.assists, s.player_rating, "
+            "s.yellow_cards, s.red_cards "
+            "from player_match_stats s join players p on p.player_id = s.player_id "
+            "where s.match_id = :mid order by s.player_rating desc nulls last"
+        ),
+        {"mid": match_id},
+    ).mappings().all()
+    return {"match": dict(match), "performers": [dict(p) for p in performers]}
+
+
+@router.get("/matches/{match_id}", response_model=MatchReport)
+def get_cached_match_report(match_id: str, db: Connection = Depends(get_db)):
+    row = db.execute(
+        text(
+            "select mr.match_id, m.team_a, m.team_b, mr.report_text, mr.generated_at "
+            "from match_reports mr join matches m on m.match_id = mr.match_id "
+            "where mr.match_id = :mid"
+        ),
+        {"mid": match_id},
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="no report generated yet for this match")
+    return row
+
+
+@router.post("/matches/{match_id}", response_model=MatchReport)
+def generate_match_report_route(
+    match_id: str, db: Connection = Depends(get_db), _rate_limit: None = Depends(rate_limit)
+):
+    """Mirrors POST /reports/players|teams: generates a recap from the match's real box
+    score (build_match_summary_text()) and caches it in match_reports. Unlike the player/
+    team routes there's no separate "recent matches" fetch -- the match itself, plus its
+    full box score, is the entire context.
+    """
+    context = _fetch_match_context(match_id, db)
+    if not context:
+        raise HTTPException(status_code=404, detail="match not found")
+
+    summary = build_match_summary_text(context["match"], context["performers"])
+    try:
+        report_text = generate_match_report(summary)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"generation unavailable: {e}") from e
+
+    row = db.execute(
+        text(
+            "insert into match_reports (match_id, report_text, generated_at) "
+            "values (:mid, :report_text, now()) "
+            "on conflict (match_id) do update "
+            "set report_text = excluded.report_text, generated_at = excluded.generated_at "
+            "returning match_id, report_text, generated_at"
+        ),
+        {"mid": match_id, "report_text": report_text},
+    ).mappings().first()
+    db.commit()
+
+    return {
+        "match_id": row["match_id"],
+        "team_a": context["match"]["team_a"],
+        "team_b": context["match"]["team_b"],
+        "report_text": row["report_text"],
+        "generated_at": row["generated_at"],
+    }

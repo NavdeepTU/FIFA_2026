@@ -191,6 +191,24 @@ export async function getTeamReport(teamName: string): Promise<TeamScoutingRepor
 export const generateTeamReport = (teamName: string) =>
   apiPost<TeamScoutingReport>(`/reports/teams/${encodeURIComponent(teamName)}`, {});
 
+export type MatchReport = {
+  match_id: string;
+  team_a: string;
+  team_b: string;
+  report_text: string;
+  generated_at: string;
+};
+
+export async function getMatchReport(matchId: string): Promise<MatchReport | null> {
+  const res = await fetch(`${API_BASE_URL}/reports/matches/${matchId}`, { cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API /reports/matches/${matchId} failed: ${res.status}`);
+  return res.json() as Promise<MatchReport>;
+}
+
+export const generateMatchReport = (matchId: string) =>
+  apiPost<MatchReport>(`/reports/matches/${matchId}`, {});
+
 export type ChartDataPoint = {
   label: string;
   value: number | null;
@@ -227,3 +245,20 @@ export const getMatches = (stage?: string, team?: string) => {
   const qs = params.toString();
   return apiFetch<MatchRow[]>(`/analytics/matches${qs ? `?${qs}` : ""}`);
 };
+
+export type BoxScoreRow = {
+  player_name: string;
+  team: string;
+  goals: number;
+  assists: number;
+  player_rating: number | null;
+  yellow_cards: number;
+  red_cards: number;
+};
+
+export type MatchDetail = {
+  match: MatchRow;
+  box_score: BoxScoreRow[];
+};
+
+export const getMatch = (matchId: string) => apiFetch<MatchDetail>(`/analytics/matches/${matchId}`);

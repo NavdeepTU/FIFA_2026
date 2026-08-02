@@ -1,21 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { generatePlayerReport, generateTeamReport, getPlayerReport, getTeamReport } from "@/lib/api";
+import {
+  generateMatchReport,
+  generatePlayerReport,
+  generateTeamReport,
+  getMatchReport,
+  getPlayerReport,
+  getTeamReport,
+} from "@/lib/api";
 
 type ReportData = { report_text: string; generated_at: string };
+type ReportKind = "player" | "team" | "match";
 
-const FETCHERS: Record<"player" | "team", (id: string) => Promise<ReportData | null>> = {
+const FETCHERS: Record<ReportKind, (id: string) => Promise<ReportData | null>> = {
   player: getPlayerReport,
   team: getTeamReport,
+  match: getMatchReport,
 };
 
-const GENERATORS: Record<"player" | "team", (id: string) => Promise<ReportData>> = {
+const GENERATORS: Record<ReportKind, (id: string) => Promise<ReportData>> = {
   player: generatePlayerReport,
   team: generateTeamReport,
+  match: generateMatchReport,
 };
 
-export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: string }) {
+const LABELS: Record<ReportKind, string> = {
+  player: "Scouting report",
+  team: "Scouting report",
+  match: "Match recap",
+};
+
+const EMPTY_STATE_COPY: Record<ReportKind, string> = {
+  player: "No report yet — generate one from this player's real stats and recent matches.",
+  team: "No report yet — generate one from this team's real stats and recent matches.",
+  match: "No recap yet — generate one from this match's real box score.",
+};
+
+export function ScoutingReport({ kind, id }: { kind: ReportKind; id: string }) {
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -59,7 +81,7 @@ export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: stri
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-          Scouting report
+          {LABELS[kind]}
         </h3>
         {!loading && (
           <button
@@ -68,7 +90,7 @@ export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: stri
             className="text-xs rounded-full px-3 py-1.5 font-medium disabled:opacity-50"
             style={{ background: "var(--series-1)", color: "white" }}
           >
-            {generating ? "Generating..." : report ? "Regenerate" : "Generate report"}
+            {generating ? "Generating..." : report ? "Regenerate" : "Generate"}
           </button>
         )}
       </div>
@@ -90,7 +112,7 @@ export function ScoutingReport({ kind, id }: { kind: "player" | "team"; id: stri
 
       {!loading && !error && !report && (
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          No report yet — generate one from this {kind}&apos;s real stats and recent matches.
+          {EMPTY_STATE_COPY[kind]}
         </p>
       )}
 

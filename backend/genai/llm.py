@@ -46,6 +46,15 @@ TEAM_REPORT_SYSTEM_PROMPT = (
     "points."
 )
 
+MATCH_RECAP_SYSTEM_PROMPT = (
+    "You are a football journalist writing a short match recap, using ONLY the final "
+    "score, goal scorers, cards, and top-rated performer given below -- do not invent "
+    "quotes, incidents, or narrative not present in the data. Write 2-3 short "
+    "paragraphs covering: the result and its context (stage, venue), key moments "
+    "(who scored, any cards), and the standout performer. Cite specific numbers/names. "
+    "Write in plain, engaging sports-journalism prose, no headers or bullet points."
+)
+
 CHART_INTENT_SYSTEM_PROMPT = (
     "You match a user's question about a FIFA World Cup 2026 dataset to the single "
     'best-fitting chart template below. Respond ONLY with JSON: {"template": "<name>"} '
@@ -152,6 +161,18 @@ def generate_team_report(summary: str, recent_matches: list[dict]) -> str:
         TEAM_REPORT_SYSTEM_PROMPT,
         f"Season summary:\n{summary}\n\nMost recent matches:\n{match_lines}",
         max_tokens=500,
+    )
+
+
+def generate_match_report(summary: str) -> str:
+    """`summary` is build_match_summary_text()'s output. Unlike generate_player_report()/
+    generate_team_report(), there's no separate "recent matches" list to append -- the
+    match itself is the entire subject, not one data point in a longer form narrative.
+    """
+    return _complete(
+        MATCH_RECAP_SYSTEM_PROMPT,
+        f"Match summary:\n{summary}",
+        max_tokens=400,
     )
 
 

@@ -240,6 +240,24 @@ to call), embedded on both the player and team profile pages. Verified live,
 end-to-end: two players and one team (fresh generation + pre-cached load each),
 player page re-verified for regressions after the shared-component refactor.
 
+**Auto-generated match recaps** extend the same pattern to a third entity level:
+`POST /reports/matches/{match_id}` calls `generate_match_report()` with
+`build_match_summary_text()`'s output (a new summary builder in
+`genai/embeddings.py`, alongside the player/team ones — but with no matching
+embeddings table, since matches aren't retrieved via `/chat`, only players and
+teams are) and caches the result in a new `match_reports` table. Structurally
+simpler than the player/team versions: there's no separate "recent matches"
+fetch to append, since the match itself — plus its own full box score, sourced
+from a new `GET /analytics/matches/{match_id}` endpoint — is the entire
+subject rather than one data point in a season-long narrative. `ScoutingReport.tsx`
+generalized again, from `kind: "player" | "team"` to a third `"match"` variant,
+embedded on a new `/matches/[id]` detail page (`/matches` list mirrors `/teams`'s
+plain server-rendered pattern; `generateStaticParams()` reuses the already-uncapped
+`/analytics/matches` list rather than needing a dedicated `/ids` endpoint the
+way `/players/[id]` does). Verified live against the real deployed Postgres and
+a real Groq call; not yet deployed to the Azure Container App or the static
+frontend export — see `project_status.md`.
+
 **Natural-language → chart** (`POST /charts/ask`, `backend/app/routers/charts.py`) —
 backend only so far, chart rendering on the frontend is a separate later piece. This
 is the one GenAI feature in this project where "constrain the LLM to something safe"
@@ -623,9 +641,10 @@ free).
 - [x] Phase 2: ML models trained + served (rating regressor, outcome classifier,
       archetype clustering) + frontend what-if predictor, verified end-to-end
 - [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
-      limiting, player + team scouting reports, NL→chart backend (allowlisted
-      spec), all live on Azure. Remaining: chart rendering on the frontend, match
-      recaps (see §4.5)
+      limiting, player/team/match scouting reports + recaps, NL→chart backend
+      (allowlisted spec) and frontend rendering, all built. Chart rendering and
+      everything above is live on Azure; match recaps are verified locally only,
+      not yet deployed (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
       Application Insights wiring, the real backend + frontend both deployed and
       verified live end-to-end, automated backend image build/push via GitHub

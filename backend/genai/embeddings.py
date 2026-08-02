@@ -103,5 +103,42 @@ def build_team_summary_text(row: dict) -> str:
     return " ".join(sentences)
 
 
+def build_match_summary_text(match: dict, performers: list[dict]) -> str:
+    """Turns one match row plus its full player_match_stats box score into a natural-
+    language summary for the match-recap prompt (reports.py). Unlike
+    build_summary_text()/build_team_summary_text(), this has no matching embeddings
+    table -- matches aren't retrieved via /chat, only players and teams are -- so this
+    summary exists purely as Groq context, not as anything embedded.
+    """
+    scoreline = f"{match['team_a']} {match['goals_a']}-{match['goals_b']} {match['team_b']}"
+    sentences = [
+        f"{match['tournament_stage']} match at {match['stadium']}, {match['city']} on "
+        f"{match['match_date']}: {scoreline}."
+    ]
+
+    scorers = [p for p in performers if (p["goals"] or 0) > 0]
+    if scorers:
+        scorer_lines = ", ".join(
+            f"{p['player_name']} ({p['team']}, {p['goals']} goal(s))" for p in scorers
+        )
+        sentences.append(f"Goal scorers: {scorer_lines}.")
+
+    if performers:
+        top = performers[0]  # caller sorts by player_rating desc
+        sentences.append(
+            f"Top-rated performer: {top['player_name']} ({top['team']}), "
+            f"rating {float(top['player_rating'] or 0):.2f}."
+        )
+
+    carded = [p for p in performers if (p["yellow_cards"] or 0) or (p["red_cards"] or 0)]
+    if carded:
+        card_lines = ", ".join(
+            f"{p['player_name']} ({p['yellow_cards'] or 0}Y/{p['red_cards'] or 0}R)" for p in carded
+        )
+        sentences.append(f"Cards: {card_lines}.")
+
+    return " ".join(sentences)
+
+
 def to_pgvector_literal(vector: Iterable[float]) -> str:
     return "[" + ",".join(f"{v:.6f}" for v in vector) + "]"

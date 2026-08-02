@@ -116,3 +116,25 @@ def matches(
     sql += " order by match_date"
     rows = db.execute(text(sql), params).mappings().all()
     return list(rows)
+
+
+@router.get("/matches/{match_id}")
+def match_detail(match_id: str, db: Connection = Depends(get_db)):
+    match = db.execute(
+        text("select * from matches where match_id = :mid"),
+        {"mid": match_id},
+    ).mappings().first()
+    if not match:
+        raise HTTPException(status_code=404, detail="match not found")
+
+    box_score = db.execute(
+        text(
+            "select p.player_name, s.team, s.goals, s.assists, s.player_rating, "
+            "s.yellow_cards, s.red_cards "
+            "from player_match_stats s join players p on p.player_id = s.player_id "
+            "where s.match_id = :mid order by s.player_rating desc nulls last"
+        ),
+        {"mid": match_id},
+    ).mappings().all()
+
+    return {"match": dict(match), "box_score": list(box_score)}

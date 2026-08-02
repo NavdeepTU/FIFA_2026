@@ -1,11 +1,11 @@
 # Project Status
 
-Last updated: 2026-08-02 (natural-language → chart feature completed end to end —
-frontend rendering shipped on top of the backend allowlist built earlier the same
-day; verified live with a real Groq call, real chart data, and a real browser
-page load). Update this file whenever a task completes or scope changes — it
-should always reflect what's actually working right now, not what's planned
-(that's `project_scope.md`).
+Last updated: 2026-08-02 (auto-generated match recaps built end to end, backend +
+frontend, closing out the last remaining Phase 3 GenAI item — verified against
+the real deployed Postgres and a real Groq call, not yet deployed to Azure).
+Update this file whenever a task completes or scope changes — it should always
+reflect what's actually working right now, not what's planned (that's
+`project_scope.md`).
 
 ## Done and verified
 
@@ -53,8 +53,9 @@ should always reflect what's actually working right now, not what's planned
 
 ### Frontend (Next.js 16)
 - Pages: overview (`/`), player leaderboard + profile (`/players`, `/players/[id]`),
-  team standings + profile (`/teams`, `/teams/[team]`), live rating predictor (`/predict`),
-  chat assistant (`/chat`), natural-language chart builder (`/charts`).
+  team standings + profile (`/teams`, `/teams/[team]`), match list + detail
+  (`/matches`, `/matches/[id]`), live rating predictor (`/predict`), chat assistant
+  (`/chat`), natural-language chart builder (`/charts`).
 - Chat page: chat-bubble UI (user messages right-aligned, assistant answers left with
   source player chips underneath), example prompt suggestions for an empty chat,
   animated "thinking" indicator while waiting on Groq, calls `POST /chat/ask`.
@@ -225,10 +226,58 @@ should always reflect what's actually working right now, not what's planned
   `az storage blob upload-batch` is fine for a few hundred files; `azcopy sync`
   is the right tool once a static export grows this large (driven by the
   per-player/per-team static pages).
-- Not done yet: auto-generated match recaps (the last remaining "scouting
-  reports / match recaps" item — match-level rather than player/team-level,
-  would need a per-match cache key and likely a frontend matches page, which
-  doesn't exist yet) — see "Not started yet" below.
+- Built next (same "reports" family) — see "Auto-generated match recaps" below,
+  which closes out this item.
+
+### Auto-generated match recaps (Phase 3, closing slice)
+- **`POST`/`GET /reports/matches/{match_id}`** (`backend/app/routers/reports.py`):
+  the last remaining "scouting reports / match recaps" item from
+  `project_scope.md` §5, mirroring the player/team report pattern exactly —
+  `build_match_summary_text()` (new, `backend/genai/embeddings.py`) turns a
+  match's real box score into natural-language context, `generate_match_report()`
+  (`backend/genai/llm.py`) sends it to Groq with a sports-journalism system
+  prompt, cached in a new `match_reports` table. Unlike player/team reports,
+  there's no separate "recent matches" fetch appended — the match itself, plus
+  its full box score, is the entire subject rather than one data point in a
+  longer-form narrative. Shares the same rate limiter as the rest of the GenAI
+  surface.
+- **New `GET /analytics/matches/{match_id}`** (`backend/app/routers/analytics.py`):
+  returns a match plus its full box score (every `player_match_stats` row for
+  that match, joined to `player_name`, sorted by rating) — used both as the
+  match-recap generation context and as the frontend detail page's data source.
+- **`match_reports` schema pushed to the deployed Azure Postgres via
+  `apply_schema()` only** (`etl/load.py`), not a full `etl/load.py` run —
+  deliberately avoided the documented `truncate ... cascade` behavior that wipes
+  `player_embeddings`/`team_embeddings` on every full reload (see "Infrastructure"
+  below), since only a new `create table if not exists` was needed, not a data
+  reload.
+- **Frontend**: new `/matches` (list, mirrors `/teams`'s plain server-rendered
+  `DataTable` pattern — no client-side filtering) and `/matches/[id]` (detail,
+  mirrors `/players/[id]`'s `generateStaticParams()` + build-time fetch
+  pattern) pages. `generateStaticParams()` reuses the existing, already-uncapped
+  `getMatches()` list call instead of needing a new dedicated `/ids` endpoint
+  (unlike players, `/analytics/matches` was never capped to a top-N). `<ScoutingReport>`
+  generalized from `kind: "player" | "team"` to a third `"match"` variant
+  (reused as-is — it only ever rendered `report_text`/`generated_at`, so no new
+  component needed, just new fetch/generate functions and copy per kind).
+- Unit-tested: 6 new tests for `build_match_summary_text()` (scorers, top-rated
+  performer, cards, empty-performers edge case), 2 for the new analytics
+  endpoint, 8 for the reports router (cache hit/miss, generation, 503 on Groq
+  failure, rate limiting) — 62 backend tests total, up from 39. `make lint` clean.
+- **Verified live end-to-end against the real deployed Postgres + a real Groq
+  call** (not mocked, not yet the deployed Container App): generated a recap for
+  a real match (Chile 1-1 Ecuador) that correctly cited the exact goal scorers
+  (Mauricio Isla, Gonzalo Mena), all 7 correctly-named carded players, and the
+  correct top-rated performer (Diego Pacho, rating 8.40) — then confirmed
+  caching (13ms round-trip on a second request, same timestamp, no new Groq
+  call). Local static export built cleanly against the real running backend:
+  2,356 pages total, including all 1,050 new match detail pages.
+- **Not yet deployed**: this session's work is code + a schema change on the
+  real database, verified against a local backend process — the API image
+  hasn't been rebuilt/pushed and the frontend static export hasn't been
+  re-uploaded, so `/matches` and match recaps aren't live at the real deployed
+  URLs yet. That's the natural next checkpoint (same `az acr build` +
+  `terraform apply` + `azcopy sync` sequence as every prior deploy).
 
 ### CI/CD (Phase 4, first slice)
 - `.github/workflows/ci.yml`: lint + test on every push to `main`/`master` and every
@@ -642,14 +691,15 @@ should always reflect what's actually working right now, not what's planned
 
 ## Not started yet
 
-- **Phase 3 (GenAI)**: embeddings (player and team), retrieval, grounded generation,
-  rate limiting, auto-generated/cached scouting reports (player and team), a
-  frontend chat UI, and the natural-language → chart feature (allowlisted
-  backend spec + frontend rendering, see above) are all built — the core RAG
-  feature works end-to-end, backend and frontend, answers both player- and
-  team-level questions, with a real usage safety net. Still unbuilt:
-  auto-generated match recaps (the one remaining "reports" item — match-level,
-  not player/team-level).
+- **Phase 3 (GenAI) is now fully built**: embeddings (player and team),
+  retrieval, grounded generation, rate limiting, auto-generated/cached
+  scouting reports (player, team, and now match recaps), a frontend chat UI,
+  and the natural-language → chart feature (allowlisted backend spec +
+  frontend rendering) are all built — the core RAG feature works end-to-end,
+  backend and frontend, answers both player- and team-level questions, with a
+  real usage safety net, and every item in `project_scope.md` §5 has shipped.
+  Match recaps specifically are verified locally but **not yet deployed** —
+  see "Auto-generated match recaps" above.
 - **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
   the real FastAPI backend, the real Next.js frontend, automated build/push of the
   backend image on every merge (via GitHub Actions OIDC), a working Grafana

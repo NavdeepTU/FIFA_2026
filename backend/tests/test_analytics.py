@@ -48,3 +48,20 @@ def test_team_not_found(make_client):
     client = make_client([[]])
     resp = client.get("/analytics/teams/Nowhereland")
     assert resp.status_code == 404
+
+
+def test_match_not_found(make_client):
+    client = make_client([[]])
+    resp = client.get("/analytics/matches/M99999")
+    assert resp.status_code == 404
+
+
+def test_match_detail_found(make_client):
+    match_row = [{"match_id": "M00001", "team_a": "France", "team_b": "Brazil", "goals_a": 2, "goals_b": 1}]
+    box_score_rows = [{"player_name": "Kylian Mbappe", "team": "France", "goals": 2}]
+    client = make_client([match_row, box_score_rows])
+    resp = client.get("/analytics/matches/M00001")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["match"]["team_a"] == "France"
+    assert body["box_score"] == box_score_rows
