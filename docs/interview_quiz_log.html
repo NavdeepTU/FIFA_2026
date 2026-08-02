@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Quiz Log — FIFA World Cup 26</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --card-border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --code-bg: #0b1222;
+    --what: #38bdf8; --how: #a78bfa; --arch: #34d399; --concept: #fbbf24;
+    --why: #fb923c; --better: #f87171; --questions: #2dd4bf;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    line-height: 1.6; }
+  header.page-header { padding: 2rem 1.5rem 1rem; border-bottom: 1px solid var(--card-border); }
+  header.page-header h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+  header.page-header p { margin: 0; color: var(--muted); font-size: .9rem; }
+  main { width: 100%; margin: 0; padding: 1.5rem 2.5rem 3rem; }
+  nav.toc { background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 2rem; }
+  nav.toc h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); margin: 0 0 .5rem; }
+  nav.toc ol { margin: 0; padding-left: 1.25rem; }
+  nav.toc a { color: var(--what); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  nav.toc .meta { color: var(--muted); font-size: .85rem; }
+  article.entry { background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 1.5rem 1.75rem; margin-bottom: 2.5rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0 2.5rem; }
+  article.entry > header { grid-column: 1 / -1; margin-bottom: 1.25rem; }
+  article.entry > header h2 { margin: 0 0 .25rem; font-size: 1.25rem; font-family: monospace; }
+  article.entry > header .meta { color: var(--muted); font-size: .85rem; }
+  section.block { border-left: 4px solid var(--muted); padding: .25rem 0 .25rem 1rem;
+    margin-bottom: 1.5rem; }
+  section.sec-arch { grid-column: 1 / -1; }
+  section.block h3 { margin: 0 0 .5rem; font-size: 1rem; }
+  section.block p { margin: 0 0 .75rem; }
+  section.block p:last-child { margin-bottom: 0; }
+  @media (max-width: 760px) {
+    article.entry { grid-template-columns: 1fr; }
+  }
+  section.sec-what    { border-color: var(--what); }    section.sec-what h3    { color: var(--what); }
+  section.sec-how      { border-color: var(--how); }     section.sec-how h3     { color: var(--how); }
+  section.sec-arch     { border-color: var(--arch); }    section.sec-arch h3    { color: var(--arch); }
+  section.sec-concept  { border-color: var(--concept); } section.sec-concept h3 { color: var(--concept); }
+  section.sec-why      { border-color: var(--why); }     section.sec-why h3     { color: var(--why); }
+  section.sec-better   { border-color: var(--better); }  section.sec-better h3  { color: var(--better); }
+  section.sec-questions{ border-color: var(--questions);} section.sec-questions h3 { color: var(--questions); }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  code { background: var(--code-bg); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 8px; overflow-x: auto; }
+  ul, ol { padding-left: 1.25rem; }
+  .mermaid { background: var(--code-bg); border-radius: 8px; padding: 1rem; }
+  a { color: var(--what); }
+</style>
+</head>
+<body>
+<header class="page-header">
+  <h1>Interview Quiz Log</h1>
+  <p>FIFA World Cup '26 project — accumulated deep-dives from <code>/interview-quiz</code>, newest first.</p>
+</header>
+<main>
+  <nav class="toc">
+    <h2>Entries</h2>
+    <ol id="toc-list">
+      <li><a href="#entry-2026-08-02-etl-load-py">etl/load.py</a> <span class="meta">— 2026-08-02</span></li>
+    </ol>
+  </nav>
+  <div id="entries">
+    <article class="entry" id="entry-2026-08-02-etl-load-py">
+      <header>
+        <h2>etl/load.py</h2>
+        <div class="meta">2026-08-02</div>
+      </header>
+
+      <section class="block sec-what">
+        <h3>What it is</h3>
+        <p>
+          <code>etl/load.py</code> takes the FIFA World Cup data — already cleaned up by
+          <code>transform.py</code> — and saves it into the project's Postgres database.
+          It's one script in a 3-step pipeline: clean the data, define the tables, load the
+          data in. You run it by hand or with <code>make etl-run</code>; the main app never
+          runs it itself, it just reads what this script already saved.
+        </p>
+      </section>
+
+      <section class="block sec-how">
+        <h3>How it's implemented</h3>
+        <p>
+          It reads the raw CSV, cleans it up using <code>transform.py</code>, then connects
+          to the database using a connection string from an environment variable (and stops
+          immediately with a clear error if that's missing). First it sets up the database
+          tables. Then it empties the old data and inserts the new data, table by table, in
+          an order that respects which tables depend on which — using batched inserts
+          (many rows at once) rather than one row at a time, which is much faster. Last, it
+          refreshes a few summary views the rest of the app reads from. If anything fails
+          partway through, the changes are undone instead of leaving things half-saved.
+        </p>
+      </section>
+
+      <section class="block sec-arch">
+        <h3>Architecture visualization</h3>
+        <div class="mermaid">
+flowchart LR
+  classDef frontend fill:#38bdf8,stroke:#0369a1,color:#0f172a;
+  classDef backend fill:#a78bfa,stroke:#5b21b6,color:#0f172a;
+  classDef ml fill:#fbbf24,stroke:#92400e,color:#0f172a;
+  classDef data fill:#34d399,stroke:#065f46,color:#0f172a;
+  classDef infra fill:#fb923c,stroke:#9a3412,color:#0f172a;
+  classDef external fill:#f87171,stroke:#7f1d1d,color:#0f172a;
+  classDef target fill:#2dd4bf,stroke:#134e4a,color:#0f172a,stroke-width:3px;
+
+  Make["Run the pipeline<br/>(make etl-run)"]:::infra
+  CSV["Raw data file (CSV)"]:::data
+  Transform["Cleans the data<br/>(transform.py)"]:::data
+  Load["etl/load.py<br/>saves it to the database"]:::target
+  Schema["Table definitions<br/>(schema.sql)"]:::data
+  PG[("Postgres database")]:::data
+  Features["ML code reuses<br/>the same cleaning step"]:::ml
+
+  Make --> Load
+  CSV --> Transform --> Load
+  Schema -.used to set up tables.-> Load
+  Load -->|wipes and reloads tables, refreshes views| PG
+  Transform -. also reused by .-> Features
+        </div>
+      </section>
+
+      <section class="block sec-concept">
+        <h3>Concept(s) it demonstrates</h3>
+        <p>
+          <strong>Idempotent writes</strong> — running it twice gives the same result, not
+          duplicates, because it wipes and reloads rather than appending.
+          <strong>Respecting foreign keys</strong> — tables are loaded in an order that
+          makes sure nothing points to data that isn't there yet. <strong>Batched
+          inserts</strong> — saving many rows per trip to the database instead of one at a
+          time, which is much faster.
+        </p>
+      </section>
+
+      <section class="block sec-why">
+        <h3>Why this approach, and what else was considered</h3>
+        <p>
+          Wiping and reloading the tables each run is simple, and works well here because
+          the source is one complete file, not a stream of new records to merge in. A tool
+          like Airflow or dbt handles more complex, multi-source pipelines better, but
+          would be overkill for a single CSV loaded occasionally by hand.
+        </p>
+      </section>
+
+      <section class="block sec-better">
+        <h3>What could be better next time</h3>
+        <p>
+          Wiping the tables also accidentally wipes a couple of related tables (like saved
+          AI-generated embeddings) every single time it runs — that's documented, but only
+          fixed with a printed reminder to regenerate them, not a real fix. A cleaner
+          version would avoid touching those tables at all.
+        </p>
+      </section>
+
+      <section class="block sec-questions">
+        <h3>Likely interview questions</h3>
+        <ol>
+          <li>
+            <strong>"What happens if this fails halfway through a run?"</strong> — the
+            database changes happen inside a transaction, so a failure undoes the partial
+            work instead of leaving things half-saved.
+          </li>
+          <li>
+            <strong>"Tell me about a real bug this had."</strong> — a comment right before
+            one table's setup code accidentally made the script skip creating that table
+            entirely, while still reporting success; it was found, fixed, and now has a
+            test that checks for it.
+          </li>
+          <li>
+            <strong>"Why does rerunning this wipe out unrelated data?"</strong> — deleting a
+            table's rows cascades to anything that references it, which reached further
+            than intended; worth discussing safer, more targeted alternatives.
+          </li>
+        </ol>
+      </section>
+    </article>
+  </div>
+</main>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#0b1222', primaryColor: '#1e293b', primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#334155', lineColor: '#64748b',
+      secondaryColor: '#334155', tertiaryColor: '#0f172a'
+    }
+  });
+</script>
+</body>
+</html>
