@@ -25,3 +25,10 @@ groq==1.6.0
 # psycopg2 via OpenTelemetry's standard instrumentation packages, so request traces
 # and DB spans show up with no per-route code changes.
 azure-monitor-opentelemetry==1.8.9
+
+# Sentry: dedicated error tracking (issue grouping, stack traces, breadcrumbs) as a
+# complement to Application Insights above -- App Insights is the metrics/traces/logs
+# platform (latency, request volume, DB spans), Sentry is specifically for "an
+# exception happened, here's the full context to debug it." Same env-var-gated,
+# no-op-when-unset pattern as Application Insights (see app/main.py).
+sentry-sdk[fastapi]==2.66.1

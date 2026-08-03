@@ -1,11 +1,12 @@
 # Project Status
 
-Last updated: 2026-08-02 (auto-generated match recaps built end to end, backend +
-frontend, closing out the last remaining Phase 3 GenAI item — verified against
-the real deployed Postgres and a real Groq call, not yet deployed to Azure).
-Update this file whenever a task completes or scope changes — it should always
-reflect what's actually working right now, not what's planned (that's
-`project_scope.md`).
+Last updated: 2026-08-03 (match recaps deployed and verified live on Azure;
+Sentry error tracking added for both backend and frontend, deployed, and
+verified live against real production infrastructure — confirmed via a real
+triggered error on the actual deployed API and the actual deployed frontend
+site, not just locally). Update this file whenever a task completes or scope
+changes — it should always reflect what's actually working right now, not
+what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -272,12 +273,20 @@ reflect what's actually working right now, not what's planned (that's
   caching (13ms round-trip on a second request, same timestamp, no new Groq
   call). Local static export built cleanly against the real running backend:
   2,356 pages total, including all 1,050 new match detail pages.
-- **Not yet deployed**: this session's work is code + a schema change on the
-  real database, verified against a local backend process — the API image
-  hasn't been rebuilt/pushed and the frontend static export hasn't been
-  re-uploaded, so `/matches` and match recaps aren't live at the real deployed
-  URLs yet. That's the natural next checkpoint (same `az acr build` +
-  `terraform apply` + `azcopy sync` sequence as every prior deploy).
+- **Deployed and verified live**: shipped as `fifa26-api:v5` via `az acr build` +
+  `terraform apply`; `match_reports` schema applied directly to the real Azure
+  Postgres via `apply_schema()` (not a full `etl/load.py` run, to avoid the
+  documented truncate-cascade wipe of the embeddings tables). Frontend static
+  export rebuilt and uploaded via `azcopy sync` (~9.9k files, 2 minutes, zero
+  failures). Confirmed live: `/matches` and `/matches/{id}` return real data,
+  and `POST /reports/matches/{id}` generated a real recap against the deployed
+  API. **Found and fixed a stale Postgres firewall rule while deploying**: the
+  `allow-dev-ip` rule still had an old IP from a previous network change,
+  causing the schema-apply connection to time out — updated via `az postgres
+  flexible-server firewall-rule update`, and `infra/terraform.tfvars`'s
+  `dev_ip_address` was also updated to match, since it had silently drifted
+  from the manually-applied fix and a future plain `terraform apply` would
+  have reverted it back to the stale IP.
 
 ### CI/CD (Phase 4, first slice)
 - `.github/workflows/ci.yml`: lint + test on every push to `main`/`master` and every
@@ -613,6 +622,85 @@ reflect what's actually working right now, not what's planned (that's
   already works correctly, so this is optional cleanup, not a fix, for a future
   session.
 
+### Sentry error tracking (Phase 4, eighth slice)
+- **Backend**: `sentry_sdk.init(dsn=..., traces_sample_rate=0)` in `app/main.py`,
+  gated on `settings.sentry_dsn` (`SENTRY_DSN` env var) — same env-var-gated,
+  no-op-when-unset pattern as Application Insights. `traces_sample_rate=0`
+  deliberately: this project already has dedicated tracing via Application
+  Insights/OpenTelemetry, so Sentry here is scoped to error tracking only, not
+  a second, redundant tracing pipeline. `sentry-sdk[fastapi]==2.66.1` added to
+  `backend/requirements.txt`.
+- **Found and corrected a wrong assumption while wiring the exception handler**:
+  initially added an explicit `sentry_sdk.capture_exception(exc)` call inside
+  the existing global `@app.exception_handler(Exception)`, reasoning (by analogy
+  with the earlier `FastAPIInstrumentor.instrument_app()` lesson) that a custom
+  handler swallowing the exception into a `JSONResponse` would prevent Sentry's
+  auto-instrumentation from ever seeing it. A live test showed the error reached
+  Sentry either way — the traceback revealed Sentry's Starlette integration
+  specifically patches `ExceptionMiddleware.__call__` to re-raise after a custom
+  handler runs, purely so its own outer capture point still observes it. Removed
+  the redundant explicit call (it would have double-reported every error) and
+  documented the actual mechanism in a comment instead.
+- **Frontend**: `@sentry/nextjs@10.69.0`. Since this site is a static export
+  (`output: "export"`, no Node/edge server at request time), skipped the
+  standard `@sentry/nextjs` wizard's server/edge config files and
+  `withSentryConfig()` build wrapper entirely — deliberate, not an oversight:
+  those exist for source-map upload and request tunneling on a running Next.js
+  server, neither of which applies here. Client-side capture is what's
+  relevant, and `Sentry.init({dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0})` in a new `instrumentation-client.ts` (Next's
+  auto-loaded client-instrumentation convention) is sufficient on its own —
+  installs global handlers for uncaught exceptions and unhandled promise
+  rejections with no further config. Added `src/app/global-error.tsx`
+  (Sentry's documented App Router pattern) on top, since React render errors
+  don't reach `window.onerror` the same way.
+- **`npm audit` flagged 4 high-severity vulnerabilities after installing** —
+  investigated rather than blindly running `--force`: 3 of the 4 are nested
+  inside `next`'s own dependency tree (`postcss`, `sharp`), and the suggested
+  fix would downgrade Next.js from 16 to 9, a massive breaking change wildly
+  disproportionate to the actual risk on a fixed-dataset static site with no
+  user uploads or attacker-controlled CSS. Applied only the one safe,
+  non-breaking fix (`brace-expansion`) via plain `npm audit fix`; left the rest.
+- **Verified live, twice over, not just "no errors on deploy"**: triggered a
+  real unhandled exception against a local backend (temporary debug route,
+  removed immediately after) and a real uncaught browser error against the
+  local frontend dev server — both confirmed landing in their respective
+  Sentry project dashboards by direct visual check, not just "the SDK didn't
+  throw." Repeated both checks against the actual deployed infrastructure
+  after shipping: the live Container App's startup log (`sentry_configured`)
+  confirmed via a direct Log Analytics KQL query (`az containerapp logs show`
+  wasn't reliably capturing the cold-start window, since `min_replicas = 0`
+  means the container can scale to zero between checks — the workspace query
+  is the durable source of truth, same lesson as the Grafana dashboarding
+  session), and a real triggered browser error against the live production
+  URL was confirmed in the Sentry dashboard too.
+- **Infra**: new `var.sentry_dsn_backend` (`infra/variables.tf`), passed as a
+  plain Container App env var (`infra/container_apps.tf`) rather than a Key
+  Vault secret — deliberately, unlike `groq_api_key`: a Sentry DSN is a
+  write-only ingest endpoint meant to be embeddable/public (the same value
+  ends up baked directly into the frontend's public JS bundle for the Next.js
+  project), not credential material. Shipped as `fifa26-api:v6`.
+  `NEXT_PUBLIC_SENTRY_DSN` added to the CI frontend build step
+  (`.github/workflows/ci.yml`), mirroring `NEXT_PUBLIC_API_URL`'s existing
+  pattern — the actual GitHub repository Variable itself hasn't been set yet,
+  so this wiring is inert in CI until that one manual step happens.
+- **Deploy tooling note**: `azcopy sync` and even `azcopy copy` both hit a
+  persistent connection-reset failure this session on the `$web` container's
+  destination-listing call (now ~21k blobs across all deploys) — unlike the
+  match-recap deploy, a fresh restart didn't clear it this time, pointing to a
+  genuinely flaky network window rather than a one-off blip. Fell back to `az
+  storage blob upload-batch`, which doesn't do this large listing call and
+  isn't affected by this specific failure mode (its own known weakness is
+  being slow, not failing outright). To unblock verification immediately
+  rather than waiting ~15-20 minutes for the full 21,217-file batch, uploaded
+  just the ~13 files the homepage actually needs via individual `az storage
+  blob upload` calls first, verified Sentry live within a minute, then let the
+  full batch finish in the background for total site consistency. Also found
+  and killed a genuine zombie process from the earlier match-recap deploy: an
+  `azcopy sync` invocation that was believed killed had actually orphaned and
+  kept retrying with an expired SAS token for 90+ minutes, silently competing
+  for bandwidth with this session's uploads.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -691,23 +779,24 @@ reflect what's actually working right now, not what's planned (that's
 
 ## Not started yet
 
-- **Phase 3 (GenAI) is now fully built**: embeddings (player and team),
-  retrieval, grounded generation, rate limiting, auto-generated/cached
-  scouting reports (player, team, and now match recaps), a frontend chat UI,
+- **Phase 3 (GenAI) is fully built and fully deployed**: embeddings (player and
+  team), retrieval, grounded generation, rate limiting, auto-generated/cached
+  scouting reports and recaps (player, team, and match), a frontend chat UI,
   and the natural-language → chart feature (allowlisted backend spec +
-  frontend rendering) are all built — the core RAG feature works end-to-end,
-  backend and frontend, answers both player- and team-level questions, with a
-  real usage safety net, and every item in `project_scope.md` §5 has shipped.
-  Match recaps specifically are verified locally but **not yet deployed** —
-  see "Auto-generated match recaps" above.
-- **Phase 4 (observability/CI/CD)**: lint + test CI, Application Insights wiring,
-  the real FastAPI backend, the real Next.js frontend, automated build/push of the
-  backend image on every merge (via GitHub Actions OIDC), a working Grafana
-  dashboard on real telemetry, and correct FastAPI request-span instrumentation
-  (`AppRequests` now populates for real) are all built. Still unbuilt: automating
+  frontend rendering) — every item in `project_scope.md` §5 has shipped and is
+  live on Azure, nothing left in this phase.
+- **Phase 4 (observability/CI/CD) is nearly fully built**: lint + test CI,
+  Application Insights wiring, the real FastAPI backend, the real Next.js
+  frontend, automated build/push of the backend image on every merge (via
+  GitHub Actions OIDC), a working Grafana dashboard on real telemetry, correct
+  FastAPI request-span instrumentation, and Sentry error tracking (backend +
+  frontend, deployed, verified live) are all built. Still unbuilt: automating
   the *deploy* half of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge —
-  still a deliberate manual step), automating the frontend build/upload the same
-  way, Sentry, load testing.
+  still a deliberate manual step), automating the frontend build/upload the
+  same way, load testing. One loose end: the `NEXT_PUBLIC_SENTRY_DSN` GitHub
+  repository Variable hasn't actually been set yet, so CI's frontend build
+  step (already wired to read it) is currently a no-op for Sentry until that
+  one manual step happens.
 
 ## Known limitations / honest caveats
 

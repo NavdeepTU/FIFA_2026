@@ -1,7 +1,7 @@
 variable "api_image" {
   description = "Overridden via TF_VAR_api_image after each manual build/push (az acr build); until CI automates this, the default here is the source of truth for 'what's actually live' so a plain `terraform apply` can't silently roll the deployment back to an older image."
   type        = string
-  default     = "acrfifa26dev6q3jm1.azurecr.io/fifa26-api:v4"
+  default     = "acrfifa26dev6q3jm1.azurecr.io/fifa26-api:v6"
 }
 
 variable "grafana_image" {
@@ -104,6 +104,14 @@ resource "azurerm_container_app" "api" {
       env {
         name  = "APPLICATIONINSIGHTS_CONNECTION_STRING"
         value = azurerm_application_insights.this.connection_string
+      }
+      env {
+        # Plain env var, not a Key Vault secret -- same reasoning as
+        # APPLICATIONINSIGHTS_CONNECTION_STRING above: not user-supplied credential
+        # material, and (unlike groq_api_key) a Sentry DSN is designed to be public.
+        # Empty string is a valid, documented no-op for sentry_sdk.init(dsn=...).
+        name  = "SENTRY_DSN"
+        value = var.sentry_dsn_backend
       }
       env {
         # The deployed frontend (Blob Storage static site) and this API are on

@@ -31,6 +31,21 @@ if settings.applicationinsights_connection_string:
 else:
     logger.info("application_insights_not_configured")
 
+if settings.sentry_dsn:
+    # Sentry: dedicated error tracking (issue grouping, stack traces, breadcrumbs),
+    # complementing Application Insights above -- App Insights answers "what's the
+    # request volume/latency/DB spans," Sentry answers "an exception happened, here's
+    # the full context to debug it." Same env-var-gated, no-op-when-unset pattern.
+    # traces_sample_rate=0 -- this project already has dedicated tracing via
+    # Application Insights/OpenTelemetry; Sentry here is scoped to error tracking
+    # only, not a second, redundant tracing pipeline.
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=settings.sentry_dsn, traces_sample_rate=0)
+    logger.info("sentry_configured")
+else:
+    logger.info("sentry_not_configured")
+
 app = FastAPI(title="FIFA World Cup 2026 Analytics API")
 
 if settings.applicationinsights_connection_string:
@@ -66,6 +81,13 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     correlation ID, never internals -- correct for a public-facing API surface.
     """
     logger.exception("unhandled_exception path=%s", request.url.path)
+    # No explicit sentry_sdk.capture_exception() call needed here, unlike the explicit
+    # FastAPIInstrumentor.instrument_app() call required above for Application Insights.
+    # Sentry's Starlette/FastAPI integration specifically patches ExceptionMiddleware to
+    # re-raise after a custom exception handler like this one runs, purely so its own
+    # outer capture point still sees (and reports) the exception -- verified locally: a
+    # deliberately triggered error still reached Sentry with this handler in place,
+    # confirming the auto-instrumentation, not an explicit call, is what's doing the work.
     return JSONResponse(
         status_code=500,
         content={"detail": "internal server error", "request_id": request_id_var.get()},

@@ -45,6 +45,12 @@ variable "groq_api_key" {
   default     = ""
 }
 
+variable "sentry_dsn_backend" {
+  description = "Backend (Python/FastAPI) Sentry project's DSN. Not marked sensitive: a DSN is meant to be embeddable/public (it's a write-only ingest endpoint, not a credential -- the same value ends up baked directly into the frontend's public JS bundle for the Next.js project), unlike groq_api_key or the Postgres password above. Set via TF_VAR_sentry_dsn_backend."
+  type        = string
+  default     = ""
+}
+
 variable "alert_email" {
   description = "Where budget-threshold alert emails go."
   type        = string

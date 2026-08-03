@@ -621,12 +621,34 @@ as `fifa26-api:v3` and re-verified against the actual deployed Container App:
 real traffic through the live URL, confirmed queryable with matching URLs,
 status codes, and durations.
 
+**Sentry (error tracking) is now built, deployed, and verified live too** —
+complementary to Application Insights above, not overlapping: App Insights
+answers "how's the system doing overall" (latency, request volume, DB spans),
+Sentry answers "an exception just happened, here's the full context to debug
+it" (grouped by error, stack trace, breadcrumbs). `traces_sample_rate=0` on
+both SDKs deliberately, so there's exactly one tracing pipeline (App Insights)
+and one error-tracking pipeline (Sentry), not two of either. Same env-var-gated
+no-op-when-unset pattern as everything else in this observability stack.
+Backend: `sentry_sdk.init()` in `main.py`. Frontend: since this site is a
+static export with no Node/edge server at request time, the standard
+`@sentry/nextjs` wizard's server/edge config and `withSentryConfig()` build
+wrapper (built for source-map upload and request tunneling on a *running*
+Next.js server) don't apply — skipped deliberately. `Sentry.init()` alone in
+`instrumentation-client.ts` (Next's auto-loaded client-instrumentation
+convention) is sufficient for client-side error capture, plus
+`global-error.tsx` for React render errors specifically (they don't reach
+`window.onerror` the same way). A real, deliberately triggered error was
+confirmed reaching the Sentry dashboard four separate times: local backend,
+local frontend, the actual deployed Container App (via a Log Analytics query
+for the `sentry_configured` startup trace, since the container's
+`min_replicas = 0` cold-start log window isn't reliably captured by
+`az containerapp logs show`), and the actual deployed frontend site.
+
 **Still Phase 4**: switching the Grafana dashboard from the `AppTraces` workaround
 to `AppRequests` directly (optional, the dashboard already works); automating the
 *deploy* half on merge (`terraform apply` still a deliberate manual step, same
-for the frontend build/upload); Sentry for frontend/backend error tracking; a
-Groq token-usage dashboard (cost/FinOps angle even though the API itself is
-free).
+for the frontend build/upload); a Groq token-usage dashboard (cost/FinOps angle
+even though the API itself is free); load testing.
 
 ## 10. Status checklist
 
@@ -642,12 +664,12 @@ free).
       archetype clustering) + frontend what-if predictor, verified end-to-end
 - [x] Phase 3: GenAI RAG layer (Groq) — embeddings, retrieval, generation, rate
       limiting, player/team/match scouting reports + recaps, NL→chart backend
-      (allowlisted spec) and frontend rendering, all built. Chart rendering and
-      everything above is live on Azure; match recaps are verified locally only,
-      not yet deployed (see §4.5)
+      (allowlisted spec) and frontend rendering, all built and fully deployed,
+      live on Azure end to end (see §4.5)
 - [ ] Phase 4: CI/CD, Azure Monitor wiring, Grafana, Sentry — lint+test CI,
       Application Insights wiring, the real backend + frontend both deployed and
       verified live end-to-end, automated backend image build/push via GitHub
-      Actions OIDC, and a working Grafana dashboard on real telemetry (see §9) are
-      all built; automating the deploy half on merge, `terraform apply` on merge,
-      and Sentry not yet
+      Actions OIDC, a working Grafana dashboard on real telemetry, and Sentry
+      error tracking (backend + frontend, deployed, verified live — see §9) are
+      all built; automating the deploy half on merge, `terraform apply` on
+      merge, and load testing not yet
