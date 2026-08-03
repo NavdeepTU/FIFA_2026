@@ -12,7 +12,21 @@ resource "azurerm_key_vault" "this" {
 resource "azurerm_role_assignment" "deployer_kv_admin" {
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = var.key_vault_admin_object_id
+}
+
+# Separate, additive grant for the CI identity -- deliberately not folded into
+# deployer_kv_admin above (see that variable's description for why "current
+# identity" and "the CI identity" must be two independent, stable grants, not
+# one that silently reassigns depending on who's running terraform). Needed
+# because the API container app's env vars reference two Key Vault secrets
+# (database-url, groq-api-key) -- even a `-target`-scoped apply that only
+# touches the container app still pulls those secret resources into its
+# dependency closure, and reading/reconciling them needs this.
+resource "azurerm_role_assignment" "github_actions_kv_secrets_officer" {
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = var.github_actions_sp_object_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_url" {

@@ -20,6 +20,15 @@ terraform {
     storage_account_name = "fifatfstatend26"
     container_name       = "tfstate"
     key                  = "fifa.tfstate"
+    # Authenticates with the caller's own Azure AD identity (via `az login` locally,
+    # or ARM_USE_OIDC + the federated credential in CI) instead of a storage account
+    # access key -- keeps this consistent with "no long-lived Azure secrets" the rest
+    # of this project's auth already follows. Needs the caller to hold a data-plane
+    # role (Storage Blob Data Contributor) on the state storage account specifically
+    # -- granted once via `az role assignment create`, documented in infra/README.md,
+    # not via Terraform itself (this backend block has to already be authenticated
+    # before any Terraform-managed resource, including a role assignment, can apply).
+    use_azuread_auth = true
   }
 }
 

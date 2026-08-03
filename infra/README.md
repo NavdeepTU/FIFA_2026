@@ -80,6 +80,58 @@ never changes once done.
    means it needs a real, reachable backend right then, not just the `localhost:8000`
    fallback in `lib/api.ts`.
 
+5. **Automated backend deploy** (`.github/workflows/ci.yml`'s `terraform-apply` job): after
+   `build-push-image` pushes a new image, this job deploys it to the live Container App —
+   but gated behind a required manual approval (a GitHub Environment named `production`
+   with a required reviewer), not fully automatic. Same reused OIDC identity as the build
+   job above; it just needs more permissions, granted via Terraform itself (see
+   `github_actions_container_app_contributor` in `container_apps.tf` and
+   `github_actions_kv_secrets_officer` in `keyvault.tf`) plus one thing that can't live in
+   Terraform (chicken-and-egg: the state backend needs auth before any Terraform-managed
+   resource can apply):
+   ```
+   az role assignment create --assignee <github_actions app's object id> \
+     --role "Storage Blob Data Contributor" \
+     --scope "$(az storage account show -n <tfstate storage account> -g rg-fifa-tfstate --query id -o tsv)"
+   ```
+   (Grant the same role to your own account's object ID too — `versions.tf`'s backend
+   block switched from a storage account key to `use_azuread_auth = true`, Azure AD-based
+   auth for *both* local and CI applies, consistent with this project's "no long-lived
+   Azure secrets" pattern elsewhere. `az ad signed-in-user show` / `az ad sp show` gets
+   either identity's object ID.)
+
+   **Deliberately scoped to `-target=azurerm_container_app.api`, not a full apply** — see
+   the comment on `github_actions_container_app_contributor` for the concrete reason:
+   `terraform.tfvars` (with this laptop's real dev IP, for
+   `azurerm_postgresql_flexible_server_firewall_rule.allow_dev_ip`) is gitignored and never
+   reaches CI. An untargeted apply in CI would resolve `TF_VAR_dev_ip_address` to its empty
+   default and delete that firewall rule — a real, verified-before-shipping risk, not a
+   hypothetical one. `-target` is HashiCorp's own documented "exceptional situations only,"
+   not a routine pattern — the trade-off here is deliberate: CI's job is narrowly "deploy
+   the backend image," not "reconcile the whole stack." A genuine full-stack config change
+   (new resources, SKU changes, etc.) still goes through a manual `terraform apply` from a
+   more-privileged local session, same as always.
+
+   **Same "current identity" trap almost bit twice**: `deployer_kv_admin`
+   (`keyvault.tf`) originally granted Key Vault Secrets Officer to
+   `data.azurerm_client_config.current.object_id` — "whoever's running terraform right
+   now." Once CI started running `terraform apply` too, that data source would resolve
+   to the CI identity instead of the human administrator depending on who applied last,
+   and Terraform would try to *replace* the grant (revoking human access) rather than add
+   a second one. Fixed by hardcoding the human's object ID into a real variable
+   (`key_vault_admin_object_id`) instead of tracking "current," and adding the CI
+   identity's own grant as a separate, additive resource
+   (`github_actions_kv_secrets_officer`) — verified via a real `terraform plan` showing
+   zero changes to the existing grant after the fix, confirming it resolved to the exact
+   same value as before.
+
+   Add three more **environment-scoped GitHub secrets** (Settings → Environments →
+   `production` → Secrets), not repository-wide ones — extra protection since these are
+   real credentials, distinct from the plain repository secrets above: `TF_POSTGRES_ADMIN_PASSWORD`,
+   `TF_GROQ_API_KEY`, `TF_GRAFANA_ADMIN_PASSWORD` (same real values as
+   `infra/.env.secrets`). One more repository **variable** (not scoped to the environment,
+   not sensitive — same reasoning as `NEXT_PUBLIC_SENTRY_DSN`): `TF_VAR_SENTRY_DSN_BACKEND`.
+
 ## Running a plan/apply
 
 ```

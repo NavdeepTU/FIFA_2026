@@ -103,3 +103,62 @@ jobs:
       # "could not be found in subscription" despite the registry existing -- this is
       # why.
       - run: az acr build --registry acrfifa26dev6q3jm1 --resource-group rg-fifa26-dev --image fifa26-api:${{ github.sha }} --file backend/Dockerfile backend
+
+  terraform-apply:
+    name: Deploy backend image
+    needs: build-push-image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    # Gates this job behind a required manual approval (GitHub Environment
+    # "production", configured with a required reviewer) -- CI builds and pushes the
+    # image automatically above, but nothing touches the live Container App until a
+    # human clicks approve. See docs/ARCHITECTURE.md for why this project chose a
+    # gated-CD design over full auto-deploy.
+    environment: production
+    permissions:
+      id-token: write # required to request the short-lived OIDC token both terraform init (state backend) and terraform apply (azurerm provider) exchange
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.8"
+
+      # Same federated credential as build-push-image's azure/login step, but
+      # Terraform's own state-backend auth (versions.tf's use_azuread_auth) and its
+      # azurerm provider are a separate auth path -- they don't inherit an az-cli
+      # session from a prior step, so ARM_* env vars are needed here specifically.
+      - name: terraform init
+        working-directory: infra
+        run: terraform init
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+
+      # Deliberately -target'd to just the API container app, not a full apply --
+      # see azurerm_role_assignment.github_actions_container_app_contributor's
+      # comment in infra/container_apps.tf for why. In short: terraform.tfvars (with
+      # this laptop's real dev IP) is gitignored and never reaches CI, so an
+      # untargeted apply here would resolve TF_VAR_dev_ip_address to its empty
+      # default and delete the Postgres firewall rule that lets local dev reach the
+      # database. Scoping to this one resource keeps CI's blast radius to exactly
+      # "deploy the image just built," nothing else in the stack.
+      - name: terraform apply
+        working-directory: infra
+        run: |
+          terraform apply -auto-approve \
+            -target=azurerm_container_app.api \
+            -var="api_image=acrfifa26dev6q3jm1.azurecr.io/fifa26-api:${{ github.sha }}" \
+            -var="alert_email=navdeep98.sharma@gmail.com"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: true
+          TF_VAR_postgres_admin_password: ${{ secrets.TF_POSTGRES_ADMIN_PASSWORD }}
+          TF_VAR_groq_api_key: ${{ secrets.TF_GROQ_API_KEY }}
+          TF_VAR_grafana_admin_password: ${{ secrets.TF_GRAFANA_ADMIN_PASSWORD }}
+          TF_VAR_sentry_dsn_backend: ${{ vars.TF_VAR_SENTRY_DSN_BACKEND }}

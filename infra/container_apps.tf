@@ -139,6 +139,22 @@ resource "azurerm_container_app" "api" {
   }
 }
 
+# Lets CI (.github/workflows/ci.yml's terraform-apply job, gated behind a required
+# manual approval via the "production" GitHub Environment) update this one resource
+# -- and only this one -- after building a new image. Deliberately scoped to just
+# this Container App, not the resource group: CI's automated apply always runs with
+# `-target=azurerm_container_app.api`, both so a compromised/buggy CI run can't touch
+# anything else in the stack, and so it can never see (or destroy)
+# azurerm_postgresql_flexible_server_firewall_rule.allow_dev_ip -- that resource
+# depends on TF_VAR_dev_ip_address, which only exists in the gitignored
+# terraform.tfvars on a laptop, never in CI. A full, untargeted apply run in CI
+# would resolve that var to its empty default and delete the firewall rule.
+resource "azurerm_role_assignment" "github_actions_container_app_contributor" {
+  scope                = azurerm_container_app.api.id
+  role_definition_name = "Contributor"
+  principal_id         = var.github_actions_sp_object_id
+}
+
 # Own identity, separate from the API's (azurerm_user_assigned_identity.container_apps)
 # -- Grafana needs read access to Log Analytics, nothing the API's identity has
 # (Key Vault secrets, ACR pull) and nothing it should have either. Keeping each

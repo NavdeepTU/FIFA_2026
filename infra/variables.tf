@@ -51,6 +51,12 @@ variable "sentry_dsn_backend" {
   default     = ""
 }
 
+variable "key_vault_admin_object_id" {
+  description = "Azure AD object ID of the human Key Vault administrator (the user, via `az ad signed-in-user show`). Hardcoded rather than `data.azurerm_client_config.current.object_id` deliberately: that data source resolves to whoever is currently *running* terraform, which now includes the GitHub Actions CI identity for automated deploys (see `github_actions_sp_object_id` in container_registry.tf) -- if the admin grant tracked \"current\" instead of a stable value, a CI-run apply would try to replace the grant (revoking human access) rather than just adding the CI identity's own, separate grant alongside it."
+  type        = string
+  default     = "f6b8d8f3-4665-40d8-93be-654412397ee7"
+}
+
 variable "alert_email" {
   description = "Where budget-threshold alert emails go."
   type        = string
