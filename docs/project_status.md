@@ -1,12 +1,12 @@
 # Project Status
 
-Last updated: 2026-08-03 (match recaps deployed and verified live on Azure;
-Sentry error tracking added for both backend and frontend, deployed, and
-verified live against real production infrastructure — confirmed via a real
-triggered error on the actual deployed API and the actual deployed frontend
-site, not just locally). Update this file whenever a task completes or scope
-changes — it should always reflect what's actually working right now, not
-what's planned (that's `project_scope.md`).
+Last updated: 2026-08-03 (load testing added with k6 against the real deployed
+API — found and measured a genuine ~26s cold-start cost from
+`min_replicas = 0`, previously only a documented caveat, now an actual number.
+Also: the `NEXT_PUBLIC_SENTRY_DSN` GitHub Variable flagged as a loose end
+earlier has since been set and verified via a real CI rerun). Update this file
+whenever a task completes or scope changes — it should always reflect what's
+actually working right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -701,6 +701,38 @@ what's planned (that's `project_scope.md`).
   kept retrying with an expired SAS token for 90+ minutes, silently competing
   for bandwidth with this session's uploads.
 
+### Load testing (Phase 4, ninth slice)
+- **`loadtest/analytics.js`** (k6, `make loadtest` for local / `make loadtest-deployed`
+  for the real API): a ramping load profile (5 → 15 virtual users over 60s) against
+  five read-only `/analytics/*` endpoints (standings, progression, leaderboard,
+  a player profile, a team profile). Deliberately excludes `/chat/*`, `/charts/*`,
+  `/reports/*` — those call Groq, and generating synthetic load against a
+  rate-limited, token-metered LLM endpoint would burn real API quota for no
+  useful signal about this API's own serving capacity. `/predict/*` skipped
+  too, since it's CPU-bound on the container rather than DB-bound like
+  everything actually tested. k6 chosen over Locust/JMeter specifically
+  because it's a single external binary — it never touches
+  `backend/requirements.txt` or the app's own dependency tree at all.
+- **Run locally first to validate the script**, then against the real deployed
+  Container App — same "verify against real infrastructure" standard as every
+  other feature in this project. Local: 2,640 requests, 0 failures, p95=8.45ms
+  (expected — zero real network latency). **Deployed**: 860 requests, 0
+  failures, thresholds passed (p95=331.85ms, under the 1s target), but
+  `max=26.3s` — a single dramatic outlier pulling the average up to 428ms
+  despite a median of just 280.64ms.
+- **The 26.3s outlier is a real, useful finding, not noise**: this project's
+  Container App runs with `min_replicas = 0` (documented since the third
+  deployment slice) — it scales to zero when idle, and the first request after
+  any idle period pays a genuine cold-start cost. This load test is the first
+  time that cost was actually measured rather than just noted as a caveat:
+  roughly 26 seconds for the container to spin up and serve its first request,
+  after which every subsequent request settled into the 250-330ms steady-state
+  range (real network round-trip + Postgres query time, an order of magnitude
+  slower than local's few milliseconds, which is expected crossing the public
+  internet to a database in `eastus2`). Worth knowing before any live demo:
+  the very first click after a period of inactivity will visibly hang for
+  ~25-30 seconds.
+
 ### Infrastructure (Terraform, azurerm) — APPLIED, real resources live in Azure
 - All 23 planned resources exist and are `Succeeded`: resource group (`rg-fifa26-dev`),
   Postgres Flexible Server, storage account + 3 containers, Key Vault + 2 secrets,
@@ -789,14 +821,13 @@ what's planned (that's `project_scope.md`).
   Application Insights wiring, the real FastAPI backend, the real Next.js
   frontend, automated build/push of the backend image on every merge (via
   GitHub Actions OIDC), a working Grafana dashboard on real telemetry, correct
-  FastAPI request-span instrumentation, and Sentry error tracking (backend +
-  frontend, deployed, verified live) are all built. Still unbuilt: automating
-  the *deploy* half of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge —
-  still a deliberate manual step), automating the frontend build/upload the
-  same way, load testing. One loose end: the `NEXT_PUBLIC_SENTRY_DSN` GitHub
-  repository Variable hasn't actually been set yet, so CI's frontend build
-  step (already wired to read it) is currently a no-op for Sentry until that
-  one manual step happens.
+  FastAPI request-span instrumentation, Sentry error tracking (backend +
+  frontend, deployed, verified live, and `NEXT_PUBLIC_SENTRY_DSN` confirmed
+  actually flowing through a real CI run), and k6 load testing against the
+  real deployed API are all built. Still unbuilt: automating the *deploy* half
+  of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge — still a
+  deliberate manual step) and automating the frontend build/upload the same
+  way. That's the one remaining item in the entire project scope.
 
 ## Known limitations / honest caveats
 

@@ -1,4 +1,4 @@
-.PHONY: install test lint api etl-run ml-train genai-embed genai-embed-teams frontend-dev
+.PHONY: install test lint api etl-run ml-train genai-embed genai-embed-teams frontend-dev loadtest loadtest-deployed
 
 install:
 	python3 -m venv backend/.venv
@@ -30,3 +30,9 @@ api:
 
 frontend-dev:
 	cd frontend && npm run dev
+
+loadtest:
+	k6 run loadtest/analytics.js
+
+loadtest-deployed:
+	BASE_URL=https://ca-fifa26-dev-api.livelyground-6362aca7.eastus.azurecontainerapps.io k6 run loadtest/analytics.js
