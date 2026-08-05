@@ -1,12 +1,17 @@
 # Project Status
 
-Last updated: 2026-08-03 (load testing added with k6 against the real deployed
-API — found and measured a genuine ~26s cold-start cost from
-`min_replicas = 0`, previously only a documented caveat, now an actual number.
-Also: the `NEXT_PUBLIC_SENTRY_DSN` GitHub Variable flagged as a loose end
-earlier has since been set and verified via a real CI rerun). Update this file
-whenever a task completes or scope changes — it should always reflect what's
-actually working right now, not what's planned (that's `project_scope.md`).
+**⏸ Project paused as of 2026-08-05 — all Azure infrastructure has been destroyed to
+stop billing (indefinite pause). See `docs/PAUSED.md` for exactly what was torn down
+and the full resume checklist before touching infra again.**
+
+Last updated: 2026-08-05 (automated backend deploy shipped — a gated CI/CD
+pipeline that builds+pushes an image automatically and deploys it behind a
+required manual approval, after fixing five real RBAC gaps found by running it
+live. Immediately after, the project was paused indefinitely for cost reasons:
+`terraform destroy` was run and all Azure infrastructure was torn down — see
+the pause banner above and `docs/PAUSED.md`). Update this file whenever a task
+completes or scope changes — it should always reflect what's actually working
+right now, not what's planned (that's `project_scope.md`).
 
 ## Done and verified
 
@@ -497,6 +502,58 @@ actually working right now, not what's planned (that's `project_scope.md`).
   relied on the user manually copy-pasting error text out of the browser) — sped up
   the last two fix-verify cycles considerably.
 
+### Automated backend deploy (Phase 4, tenth slice — after load testing)
+- **Design choice, deliberately not full auto-deploy**: CI now builds and pushes a new
+  backend image automatically on every merge to `master` (as before), but the actual
+  `terraform apply` against the live Container App runs behind a required manual
+  approval — a GitHub Environment named `production` with a required reviewer. Chosen
+  over fully automatic deploy specifically so a human confirms before anything touches
+  the live app, at the cost of one click per deploy.
+- **`.github/workflows/ci.yml`'s new `terraform-apply` job**: runs `terraform apply
+  -target=azurerm_container_app.api` (deliberately `-target`-scoped, not a full apply —
+  `terraform.tfvars` with the real dev IP for the Postgres firewall rule is gitignored
+  and never reaches CI; an untargeted apply would resolve that var to its empty default
+  and delete the firewall rule). Authenticates via the same OIDC identity as the
+  build-push job, but Terraform's state backend and the `azurerm` provider are a
+  separate auth path from `azure/login`, so they need their own `ARM_*` env vars.
+- **Five real, distinct permission gaps found and fixed by running the pipeline against
+  live infra, one at a time** — a genuinely useful RBAC debugging trail:
+  1. A job with `environment: production` presents a *different* OIDC subject claim
+     (`repo:...:environment:production`) than a plain branch-push job
+     (`repo:...:ref:refs/heads/master`) — needed a second federated credential trusting
+     that exact subject.
+  2. `AuthorizationFailed` reading the resource group — even a `-target`-scoped apply
+     needs to read `azurerm_resource_group.this`, since nearly every resource
+     references its name. Fixed with `github_actions_rg_reader` (`main.tf`, Reader
+     role, scoped to just the RG).
+  3. `AuthorizationFailed` on storage `listKeys` — the container app's `CORS_ORIGINS`
+     env var reads `primary_web_endpoint`, and the provider's storage-account read
+     calls `listKeys` internally, which plain `Reader` doesn't cover. Fixed with
+     `github_actions_storage_reader` (`storage.tf`, "Reader and Data Access", scoped to
+     just the storage account).
+  4. A genuinely obscure Azure Container Apps rule, found only from the real error:
+     updating a Container App joined to an environment also needs
+     `Microsoft.App/managedEnvironments/join/action` on the *environment* itself, not
+     just write access to the app. Fixed with
+     `github_actions_container_app_environment_contributor` (`container_apps.tf`,
+     Contributor scoped to just the environment resource).
+  5. A pre-existing latent bug, caught before it could bite: `deployer_kv_admin`
+     (`keyvault.tf`) granted Key Vault access to
+     `data.azurerm_client_config.current.object_id` — "whoever's running terraform
+     right now." Once CI started applying too, that would resolve to the CI identity
+     instead of the human admin depending on who applied last, and Terraform would
+     *replace* the grant (revoking human access) rather than add a second one. Fixed by
+     hardcoding the human's object ID into a real variable
+     (`key_vault_admin_object_id`) and adding the CI identity's own grant as a separate,
+     additive resource — verified via a `terraform plan` showing zero changes to the
+     existing grant after the fix.
+- **Verified working end-to-end**: after all five fixes, the gated pipeline ran clean
+  from a fresh `git push` through manual approval to a live, updated Container App
+  revision — not just "`terraform apply` exited 0."
+- **Deferred to a future session**: automating the *frontend* build/upload half (still
+  a manual `npm run build` + `az storage blob upload-batch`, same as before). That
+  remains the one item left in the whole project scope.
+
 ### Observability dashboarding (Phase 4, sixth slice)
 - **Grafana (`ca-fifa26-dev-grafana`, provisioned since the very first Terraform
   apply) is finally configured**, not just running an untouched stock image. Scope
@@ -820,14 +877,15 @@ actually working right now, not what's planned (that's `project_scope.md`).
 - **Phase 4 (observability/CI/CD) is nearly fully built**: lint + test CI,
   Application Insights wiring, the real FastAPI backend, the real Next.js
   frontend, automated build/push of the backend image on every merge (via
-  GitHub Actions OIDC), a working Grafana dashboard on real telemetry, correct
-  FastAPI request-span instrumentation, Sentry error tracking (backend +
-  frontend, deployed, verified live, and `NEXT_PUBLIC_SENTRY_DSN` confirmed
-  actually flowing through a real CI run), and k6 load testing against the
-  real deployed API are all built. Still unbuilt: automating the *deploy* half
-  of CI/CD (`TF_VAR_api_image` + `terraform apply` on merge — still a
-  deliberate manual step) and automating the frontend build/upload the same
-  way. That's the one remaining item in the entire project scope.
+  GitHub Actions OIDC), automated *deploy* of that image too (gated behind a
+  required manual approval — see "Automated backend deploy" above), a working
+  Grafana dashboard on real telemetry, correct FastAPI request-span
+  instrumentation, Sentry error tracking (backend + frontend, deployed,
+  verified live, and `NEXT_PUBLIC_SENTRY_DSN` confirmed actually flowing
+  through a real CI run), and k6 load testing against the real deployed API
+  are all built. Still unbuilt: automating the *frontend* build/upload half
+  the same way (still a manual `npm run build` + blob upload). That's the one
+  remaining item in the entire project scope.
 
 ## Known limitations / honest caveats
 

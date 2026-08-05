@@ -155,6 +155,18 @@ resource "azurerm_role_assignment" "github_actions_container_app_contributor" {
   principal_id         = var.github_actions_sp_object_id
 }
 
+# Azure requires this in addition to Contributor on the app itself -- discovered from
+# a real LinkedAuthorizationFailed in CI, not documented anywhere obvious upfront:
+# updating a Container App that's joined to a Container Apps Environment also checks
+# for `Microsoft.App/managedEnvironments/join/action` on the *environment*, a
+# separate "linked scope" authorization check. Contributor here is still narrowly
+# scoped to just this one environment resource, not the resource group.
+resource "azurerm_role_assignment" "github_actions_container_app_environment_contributor" {
+  scope                = azurerm_container_app_environment.this.id
+  role_definition_name = "Contributor"
+  principal_id         = var.github_actions_sp_object_id
+}
+
 # Own identity, separate from the API's (azurerm_user_assigned_identity.container_apps)
 # -- Grafana needs read access to Log Analytics, nothing the API's identity has
 # (Key Vault secrets, ACR pull) and nothing it should have either. Keeping each
